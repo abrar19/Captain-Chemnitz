@@ -1,0 +1,20 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+          "id": "way/23757830",
+          "name": "Sächsisches Eisenbahnmuseum",
+          "operator": "Sächsisches Eisenbahnmuseum e. V.",
+          "tourism": "museum",
+          "website": "https://www.sem-chemnitz.de/"
+        },
+        "geometry": {
+          "type": "Point",
+          "coordinates": [12.9677156, 50.8621274]
+        }
+      }
+    ]
+  }
+  
