@@ -10,11 +10,15 @@ function MapView() {
 
   const mapRef = useRef();
   const mapContainerRef = useRef();
+  const markersRef = useRef([])
+  const routeLayerIdRef = useRef(null);
+
 
 
   const [features, setFeatures] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [markerMap, setMarkerMap] = useState({});
+  const [userLocation, setUserLocation] = useState(null);
 
   const extractCategory = (properties) => {
     // Order matters: check common keys from most to least specific
@@ -63,6 +67,8 @@ function MapView() {
           const userLng = position.coords.longitude;
           const userLat = position.coords.latitude;
     
+          setUserLocation([userLng, userLat]); // ✅ moved inside
+    
           const userMarker = new mapboxgl.Marker({
             color: 'blue'
           })
@@ -70,7 +76,7 @@ function MapView() {
             .setPopup(new mapboxgl.Popup().setText('Your Location'))
             .addTo(mapRef.current);
     
-          // Optional: center the map to user location
+          // center the map to user location
           mapRef.current.setCenter([userLng, userLat]);
         },
         (error) => {
@@ -80,40 +86,13 @@ function MapView() {
       );
     }
     
+    
 
   // Fetch the geojson
-  fetch("/Chemnitz.geojson") // assuming it's in /public folder
+  fetch("/Chemnitz.geojson") // it's in /public folder
   .then((res) => res.json())
   .then((geojsonData) => {
     setFeatures(geojsonData.features);
-    const markers = {};
-
-    geojsonData.features.forEach((feature) => {
-      const { coordinates } = feature.geometry;
-      const { name, website } = feature.properties;
-
-      const category = extractCategory(feature.properties);
-
-      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
-        `<strong>${name}</strong><br/><a href="${website}" target="_blank">Website</a>`
-      );
-
-      const el = document.createElement('div');
-      el.className = 'custom-marker';
-      el.textContent = getMarkerEmoji(category);
-      el.style.fontSize = '1.25rem';
-      el.style.cursor = 'pointer';
-
-
-      const marker = new mapboxgl.Marker({ element: el })
-        .setLngLat(coordinates)
-        .setPopup(popup)
-        .addTo(mapRef.current);
-
-      markers[feature.id] = marker;
-    });
-
-    setMarkerMap(markers); 
   });
 
     return () => {
@@ -131,47 +110,192 @@ function MapView() {
     return name && name.includes(term);
   });
 
+  //route removal logic for route cleanup on search cleanup
+  const removeRoute = () => {
+    const map = mapRef.current;
+    const layerId = routeLayerIdRef.current;
+  
+    if (layerId && map.getLayer(layerId)) {
+      map.removeLayer(layerId);
+    }
+    if (layerId && map.getSource(layerId)) {
+      map.removeSource(layerId);
+    }
+  
+    routeLayerIdRef.current = null;
+  };
+  
+
+  // Update map markers when search changes
+  useEffect(() => {
+
+    if (!searchTerm.trim()) {
+      // Remove all existing markers
+      markersRef.current.forEach(marker => marker.remove());
+      markersRef.current = [];
+      removeRoute(); // If no markers will be shown, remove the route
+      return;
+    }
+
+
+    // Remove previous markers
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
+    
+    // Add filtered markers
+    const newMarkers = [];
+  
+    filteredFeatures.forEach((feature) => {
+      const { coordinates } = feature.geometry;
+      const { name, website } = feature.properties;
+      const category = extractCategory(feature.properties);
+  
+      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
+        `<strong>${name}</strong><br/><a href="${website}" target="_blank">Website</a>`
+      );
+  
+      const el = document.createElement('div');
+      el.className = 'custom-marker';
+      el.textContent = getMarkerEmoji(category);
+      el.style.fontSize = '1.25rem';
+      el.style.cursor = 'pointer';
+  
+      const marker = new mapboxgl.Marker({ element: el })
+        .setLngLat(coordinates)
+        .setPopup(popup)
+        .addTo(mapRef.current);
+  
+      newMarkers.push(marker);
+    });
+  
+    markersRef.current = newMarkers;
+  }, [filteredFeatures]);
+  
+  
+  const handleShowDirections = async (destinationCoords) => {
+    if (!userLocation) {
+      alert("User location not available");
+      return;
+    }
+  
+    const [userLng, userLat] = userLocation;
+    const [destLng, destLat] = destinationCoords;
+  
+    const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/walking/${userLng},${userLat};${destLng},${destLat}?geometries=geojson&access_token=${import.meta.env.VITE_MAPBOX_TOKEN}`;
+  
+    try {
+      const res = await fetch(directionsUrl);
+      const data = await res.json();
+      const route = data.routes[0].geometry;
+  
+      const map = mapRef.current;
+      removeRoute(); // ✅ clear existing route before adding new
+  
+      const newLayerId = `route-${Date.now()}`;
+      map.addSource(newLayerId, {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          geometry: route,
+        }
+      });
+  
+      map.addLayer({
+        id: newLayerId,
+        type: 'line',
+        source: newLayerId,
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round',
+        },
+        paint: {
+          'line-color': '#3b82f6',
+          'line-width': 4,
+        }
+      });
+  
+      routeLayerIdRef.current = newLayerId; 
+  
+      // Zoom to route bounds
+      const coords = route.coordinates;
+      const bounds = coords.reduce((b, coord) => b.extend(coord), new mapboxgl.LngLatBounds(coords[0], coords[0]));
+      map.fitBounds(bounds, { padding: 60 });
+  
+    } catch (err) {
+      console.error('Error fetching directions:', err);
+      alert("Could not fetch directions.");
+    }
+  };
+  
+  
 
   return (
     <div className="app-container">
       {/* Sidebar */}
       <div className="sidebar-panel">
         <h3 className="sidebar-title">Locations</h3>
-        <input
-          type="text"
-          placeholder="Search by name..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="search-input"
-        />
+        <div className="search-wrapper">
+          <input
+            type="text"
+            placeholder="Search by name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
+          {searchTerm && (
+            <button
+              className="clear-button"
+              onClick={() => setSearchTerm('')}
+              aria-label="Clear search"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 
+                12 13.41 17.59 19 19 17.59 13.41 12z"/>
+              </svg>
+            </button>
+          )}
+        </div>
         <ul className="location-list">
-          {filteredFeatures.map((feature) => (
+          {searchTerm.trim() && filteredFeatures.map((feature) => (
             <li 
               key={feature.id} 
               className="location-item"
               onClick={() => {
-                const marker = markerMap[feature.id];
-                if (marker) {
+                const featureCoords = feature.geometry.coordinates;
+
+                const matchedMarker = markersRef.current.find((marker) => {
+                  const lngLat = marker.getLngLat();
+                  return lngLat.lng === featureCoords[0] && lngLat.lat === featureCoords[1];
+                });
+
+                if (matchedMarker) {
                   mapRef.current.flyTo({
-                    center: feature.geometry.coordinates,
+                    center: featureCoords,
                     zoom: 15,
                     speed: 0.8,
                   });
-                  marker.togglePopup(); // open popup
+                  matchedMarker.togglePopup();
                 }
               }}
             >
               <strong>{feature.properties.name}</strong><br />
               <a href={feature.properties.website} target="_blank" rel="noreferrer">Website</a>
               <Link to={`/location/${encodeURIComponent(feature.id)}`} className="details-link">View Details</Link>
-
+              <button 
+                className="direction-button"
+                onClick={() => handleShowDirections(feature.geometry.coordinates)}
+              >
+                🧭 Directions
+              </button>
             </li>
           ))}
         </ul>
+
       </div>
 
       {/* Map container */}
       <div id="map-container" ref={mapContainerRef} />
+
     </div>
   )
 }

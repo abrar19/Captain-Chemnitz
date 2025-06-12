@@ -29,14 +29,32 @@
     color: #333;
   }
   
+  .search-wrapper {
+    position: relative;
+    width: 100%;
+  }
+  
   .search-input {
     width: 100%;
-    padding: 0.5rem;
-    margin-bottom: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 0.95rem;
+    padding: .5rem; /* leave room for the button */
   }
+  
+  .clear-button {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    color: #555;
+  }
+  
+  .clear-button:hover {
+    color: #000;
+  }
+  
   
   .location-list {
     list-style: none;
@@ -71,6 +89,16 @@
   
   .location-item a:hover {
     text-decoration: underline;
+  }
+
+  .logout-button {
+    margin-top: auto;
+    padding: 0.75rem;
+    background-color: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
   }
   
   /* Container for map and sidebar */
