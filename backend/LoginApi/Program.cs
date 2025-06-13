@@ -4,6 +4,15 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+//Enables CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp",
+        policy => policy.WithOrigins("http://localhost:5173")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod());
+});
+
 // Register DbContext with SQL Server
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -29,6 +38,8 @@ if (app.Environment.IsDevelopment())
 
 // Enables HTTPS redirection
 app.UseHttpsRedirection();
+
+app.UseCors("AllowReactApp");
 
 // Enables routing for API controllers
 app.MapControllers();

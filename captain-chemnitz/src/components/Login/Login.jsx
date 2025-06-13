@@ -8,21 +8,29 @@ function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    // Mock auth logic (replace with real backend logic)
-    const storedUser = JSON.parse(localStorage.getItem('registeredUser'));
+    try {
+      const response = await fetch('http://localhost:5029/api/user/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+      });
 
-    if (
-      (username === 'admin' && password === 'password') ||
-      (storedUser?.email === username && storedUser?.password === password)
-    ) {
-      localStorage.setItem('isAuthenticated', 'true');
-      navigate('/'); // redirect to map page
-    } else {
-      setError('Invalid username or password');
+      if (response.ok) {
+        const data = await response.text();
+        localStorage.setItem('token', data);
+        navigate('/');
+      } else {
+        setError('Invalid credentials');
+      }
+    } catch (err) {
+      setError('Error connecting to server');
     }
+
   };
 
   return (

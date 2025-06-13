@@ -2,28 +2,43 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
 function Register() {
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [message, setMessage] = useState('');
+
   const navigate = useNavigate();
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
 
-    if (password !== confirmPassword) {
-      alert("Passwords do not match");
-      return;
+    try {
+      const response = await fetch('http://localhost:5029/api/user/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username: email, password })
+      });
+
+      if (response.ok) {
+        setMessage('Registration successful!');
+        navigate('/login');
+      } else {
+        const errorText = await response.text();
+        setMessage(`Registration failed: ${errorText}`);
+      }
+    } catch (err) {
+      setMessage('Error connecting to server');
     }
 
-    // Simulated registration logic (replace with real backend logic)
-    localStorage.setItem('registeredUser', JSON.stringify({ email, password }));
-    alert("Registration successful!");
-    navigate('/login');
   };
 
   return (
     <div className="login-container">
       <h2>Register</h2>
+      {message && <p>{message}</p>}
       <form onSubmit={handleRegister} className="login-form">
         <input 
           type="email" 
