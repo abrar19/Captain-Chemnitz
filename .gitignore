@@ -1,0 +1,7 @@
+# macOS system files
+.DS_Store
+
+# Build results
+bin/
+obj/
+out/
