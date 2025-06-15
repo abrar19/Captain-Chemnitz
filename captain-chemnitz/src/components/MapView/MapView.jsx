@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom';
+import { Link, useNavigate} from 'react-router-dom';
 
 import mapboxgl from 'mapbox-gl'
 
@@ -7,6 +7,8 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import './mapView.css'
 
 function MapView() {
+
+  const navigate = useNavigate();
 
   const mapRef = useRef();
   const mapContainerRef = useRef();
@@ -19,6 +21,7 @@ function MapView() {
   const [searchTerm, setSearchTerm] = useState('');
   const [markerMap, setMarkerMap] = useState({});
   const [userLocation, setUserLocation] = useState(null);
+  const [message, setMessage] = useState('');
 
   const extractCategory = (properties) => {
     // Order matters: check common keys from most to least specific
@@ -172,6 +175,48 @@ function MapView() {
   }, [filteredFeatures]);
   
   
+  //Add to favorites
+  const addToFavorites = async (place) => {
+    const tokenData = localStorage.getItem('token');
+  
+    if (!tokenData) {
+      console.error('User not authenticated');
+      return;
+    }
+  
+    try {
+      const { token, userId } = JSON.parse(tokenData);
+  
+      const response = await fetch(`http://localhost:5029/api/user/${userId}/favorites`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // Optional if backend checks token
+        },
+        body: JSON.stringify({
+          name: place.properties.name,
+          description: place.properties.description || 'No description'
+        })
+      });
+  
+      if (response.ok) {
+        setMessage(`Added ${place.properties.name} to favorites`);
+      } else if (response.status === 409) {
+        setMessage(`⚠️ "${place.properties.name}" is already in your favorites.`);
+      } else {
+        const errorText = await response.text();
+        setMessage('Failed to add favorite:', errorText);
+      }
+    } catch (err) {
+      setMessage('Error adding favorite:', err);
+    }
+
+    setTimeout(() => setMessage(''), 2000);
+
+  };
+  
+
+
   const handleShowDirections = async (destinationCoords) => {
     if (!userLocation) {
       alert("User location not available");
@@ -226,6 +271,12 @@ function MapView() {
       alert("Could not fetch directions.");
     }
   };
+
+  //Logout
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // or localStorage.clear() if you want to wipe all
+    navigate("/login"); // Redirect to login page
+  };
   
   
 
@@ -234,6 +285,11 @@ function MapView() {
       {/* Sidebar */}
       <div className="sidebar-panel">
         <h3 className="sidebar-title">Locations</h3>
+        {message && (
+          <div className="message-box">
+            {message}
+          </div>
+        )}
         <div className="search-wrapper">
           <input
             type="text"
@@ -281,6 +337,15 @@ function MapView() {
               <strong>{feature.properties.name}</strong><br />
               <a href={feature.properties.website} target="_blank" rel="noreferrer">Website</a>
               <Link to={`/location/${encodeURIComponent(feature.id)}`} className="details-link">View Details</Link>
+              <button
+              className="favorite-button"
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent map zoom trigger
+                addToFavorites(feature);
+              }}
+            >
+              ⭐ Add to Favorites
+            </button>
               <button 
                 className="direction-button"
                 onClick={() => handleShowDirections(feature.geometry.coordinates)}
@@ -291,6 +356,17 @@ function MapView() {
           ))}
         </ul>
 
+      </div>
+      
+      {/* Floating Circular Dropdown Menu */}
+      <div className="floating-menu">
+        <input type="checkbox" id="menu-toggle" className="menu-toggle" />
+        <label htmlFor="menu-toggle" className="menu-button">☰</label>
+        <div className="menu-items">
+          <Link to="/favorites" className="menu-item" title="Favorites">⭐</Link>
+          <Link to="/profile" className="menu-item" title="Edit Profile">📝</Link>
+          <button className="menu-item logout-button" onClick={handleLogout} title="Logout">🚪</button>
+        </div>
       </div>
 
       {/* Map container */}

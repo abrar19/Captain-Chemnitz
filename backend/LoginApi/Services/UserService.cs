@@ -1,5 +1,5 @@
-using LoginApi.Models; // your User model namespace
-using LoginApi.Data;   // your AppDbContext namespace
+using LoginApi.Models; 
+using LoginApi.Data; 
 using System.Security.Cryptography;
 using System.Text;
 
@@ -14,17 +14,25 @@ namespace LoginApi.Services
             _context = context;
         }
 
+        public string HashPassword(string password)
+        {
+            using var sha = System.Security.Cryptography.SHA256.Create();
+            var bytes = Encoding.UTF8.GetBytes(password);
+            var hash = sha.ComputeHash(bytes);
+            return Convert.ToBase64String(hash);
+        }
+
         public bool Register(string username, string password)
         {
             if (_context.Users.Any(u => u.Username == username))
                 return false;
 
-            var passwordHash = ComputeSha256Hash(password);
+            var hashed = HashPassword(password);
 
             var newUser = new User
             {
                 Username = username,
-                PasswordHash = passwordHash
+                PasswordHash = hashed
             };
 
             _context.Users.Add(newUser);
@@ -33,7 +41,7 @@ namespace LoginApi.Services
             return true;
         }
 
-        public string? Authenticate(string username, string password)
+        public AuthResponse? Authenticate(string username, string password)
         {
             var passwordHash = ComputeSha256Hash(password);
 
@@ -42,20 +50,26 @@ namespace LoginApi.Services
             if (user == null)
                 return null;
 
-            // TODO: return a real JWT token later
-            return "dummy-token";
+            return new AuthResponse
+            {
+                Token = "dummy-token",
+                UserId = user.Id
+            };
         }
 
         private static string ComputeSha256Hash(string rawData)
         {
-            using (var sha256 = SHA256.Create())
-            {
-                var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(rawData));
-                var builder = new StringBuilder();
-                foreach (var b in bytes)
-                    builder.Append(b.ToString("x2"));
-                return builder.ToString();
-            }
+            using var sha = SHA256.Create();
+            var bytes = Encoding.UTF8.GetBytes(rawData);
+            var hash = sha.ComputeHash(bytes);
+            return Convert.ToBase64String(hash); 
         }
+
+
+        public User? GetByUsername(string username)
+        {
+            return _context.Users.SingleOrDefault(u => u.Username == username);
+        }
+
     }
 }
