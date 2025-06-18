@@ -10,7 +10,7 @@ function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
+  
     try {
       const response = await fetch('http://localhost:5029/api/user/login', {
         method: 'POST',
@@ -19,10 +19,16 @@ function Login() {
         },
         body: JSON.stringify({ username, password })
       });
-
+  
       if (response.ok) {
-        const data = await response.text();
-        localStorage.setItem('token', data);
+        const data = await response.json(); // parse JSON (token + userId)
+  
+        // Save token + userId in localStorage
+        localStorage.setItem('token', JSON.stringify({
+          token: data.token,
+          userId: data.userId
+        }));
+  
         navigate('/');
       } else {
         setError('Invalid credentials');
@@ -30,8 +36,8 @@ function Login() {
     } catch (err) {
       setError('Error connecting to server');
     }
-
   };
+  
 
   return (
     <div className="login-container">

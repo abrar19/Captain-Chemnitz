@@ -11,7 +11,8 @@ function ProtectedRoute({ children }) {
     // Invalid JSON or null, treat as unauthenticated
   }
 
-  return token === 'dummy-token' ? children : <Navigate to="/login" replace />;
+  // If token exists → allow
+  return token ? children : <Navigate to="/login" replace />;
 }
 
 export default ProtectedRoute;

@@ -1,6 +1,7 @@
 using LoginApi.Data;
 using LoginApi.Models;
 using LoginApi.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,12 +16,6 @@ public class UserController : ControllerBase
     {
         _userService = userService;
          _context = context;
-    }
-
-    private bool IsAuthorized()
-    {
-        return Request.Headers.TryGetValue("Authorization", out var authHeader) &&
-            authHeader == "Bearer dummy-token";
     }
 
 
@@ -47,6 +42,7 @@ public class UserController : ControllerBase
         return Ok(authResponse);
     }
 
+    [Authorize]
     [HttpPost("{userId}/favorites")]
     public async Task<IActionResult> AddFavorite(int userId, [FromBody] FavoritePlaceDto favoriteDto)
     {
@@ -79,6 +75,7 @@ public class UserController : ControllerBase
         });
     }
 
+    [Authorize]
     [HttpGet("{userId}/favorites")]
     public async Task<IActionResult> GetFavorites(int userId)
     {
@@ -89,6 +86,7 @@ public class UserController : ControllerBase
         return Ok(favorites);
     }
 
+    [Authorize]
     [HttpGet("{userId}")]
     public async Task<IActionResult> GetUser(int userId)
     {
@@ -98,14 +96,10 @@ public class UserController : ControllerBase
         return Ok(new { user.Id, user.Username });
     }
 
-
+    [Authorize]
     [HttpPut("{userId}")]
     public async Task<IActionResult> UpdateProfile(int userId, [FromBody] UserUpdateRequest request)
     {   
-        //
-        if (!IsAuthorized())
-            return Unauthorized("Invalid or missing token.");
-
         // Find the user
         var user = await _context.Users.FindAsync(userId);
         if (user == null)
@@ -116,7 +110,7 @@ public class UserController : ControllerBase
 
         if (!string.IsNullOrWhiteSpace(request.Password))
         {
-            user.PasswordHash = _userService.HashPassword(request.Password); // Ensure this hashes the password
+            user.PasswordHash = _userService.HashPassword(request.Password); //this hashes the password
         }
 
         await _context.SaveChangesAsync();
