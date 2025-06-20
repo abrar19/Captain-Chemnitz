@@ -5,4 +5,5 @@
 bin/
 obj/
 out/
-backend/LoginApi/.gitignore
+#jwt key
+backend/LoginApi/appsetting.Development.json

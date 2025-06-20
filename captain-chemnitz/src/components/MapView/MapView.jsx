@@ -3,6 +3,8 @@ import { Link, useNavigate} from 'react-router-dom';
 
 import mapboxgl from 'mapbox-gl'
 
+import * as turf from '@turf/turf';
+
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './mapView.css'
 
@@ -14,6 +16,7 @@ function MapView() {
   const mapContainerRef = useRef();
   const markersRef = useRef([])
   const routeLayerIdRef = useRef(null);
+  const isochroneLayerIdRef = useRef(null);
 
 
 
@@ -174,6 +177,101 @@ function MapView() {
     markersRef.current = newMarkers;
   }, [filteredFeatures]);
   
+  //Handle Isochrone (locations within 10 mins of distance)
+  const handleShowIsochrone = async () => {
+    if (!userLocation) {
+      alert("User location not available");
+      return;
+    }
+  
+    const [lng, lat] = userLocation;
+  
+    const isochroneUrl = `https://api.mapbox.com/isochrone/v1/mapbox/driving-traffic/${lng},${lat}?contours_minutes=10&polygons=true&access_token=${import.meta.env.VITE_MAPBOX_TOKEN}`;
+  
+    try {
+      const res = await fetch(isochroneUrl);
+      const data = await res.json();
+  
+      const map = mapRef.current;
+  
+      // Remove existing isochrone if present
+      if (isochroneLayerIdRef.current && map.getLayer(isochroneLayerIdRef.current)) {
+        map.removeLayer(isochroneLayerIdRef.current);
+        map.removeSource(isochroneLayerIdRef.current);
+      }
+  
+      const newLayerId = `isochrone-${Date.now()}`;
+  
+      map.addSource(newLayerId, {
+        type: 'geojson',
+        data: data
+      });
+  
+      map.addLayer({
+        id: newLayerId,
+        type: 'fill',
+        source: newLayerId,
+        layout: {},
+        paint: {
+          'fill-color': '#5a3fc0',
+          'fill-opacity': 0.3
+        }
+      });
+  
+      isochroneLayerIdRef.current = newLayerId;
+  
+      // Zoom to isochrone bounds
+      const bounds = new mapboxgl.LngLatBounds();
+      data.features[0].geometry.coordinates[0].forEach(coord => bounds.extend(coord));
+      map.fitBounds(bounds, { padding: 40 });
+
+      // 🌟 Filter locations within isochrone
+      const isochronePolygon = turf.polygon(data.features[0].geometry.coordinates);
+
+      const locationsWithinIsochrone = features.filter(feature => {
+        const point = turf.point(feature.geometry.coordinates);
+        return turf.booleanPointInPolygon(point, isochronePolygon);
+      });
+
+      console.log("Locations within isochrone:", locationsWithinIsochrone);
+
+      // Optional: Update your markers to only show these
+      markersRef.current.forEach(marker => marker.remove());
+      markersRef.current = [];
+
+      const newMarkers = [];
+
+      locationsWithinIsochrone.forEach((feature) => {
+        const { coordinates } = feature.geometry;
+        const { name, website } = feature.properties;
+        const category = extractCategory(feature.properties);
+
+        const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
+          `<strong>${name}</strong><br/><a href="${website}" target="_blank">Website</a>`
+        );
+
+        const el = document.createElement('div');
+        el.className = 'custom-marker';
+        el.textContent = getMarkerEmoji(category);
+        el.style.fontSize = '1.25rem';
+        el.style.cursor = 'pointer';
+
+        const marker = new mapboxgl.Marker({ element: el })
+          .setLngLat(coordinates)
+          .setPopup(popup)
+          .addTo(map);
+
+        newMarkers.push(marker);
+      });
+
+      markersRef.current = newMarkers;
+
+  
+    } catch (err) {
+      console.error("Failed to fetch isochrone:", err);
+      alert("Failed to fetch walking zone.");
+    }
+  };
   
   //Add to favorites
   const addToFavorites = async (place) => {
@@ -366,6 +464,7 @@ function MapView() {
           <Link to="/favorites" className="menu-item" title="Favorites">⭐</Link>
           <Link to="/profile" className="menu-item" title="Edit Profile">📝</Link>
           <button className="menu-item logout-button" onClick={handleLogout} title="Logout">🚪</button>
+          <button className="menu-item" onClick={handleShowIsochrone} title="10-Min Walk Zone">🚶‍♂️ 10 Min Zone</button>
         </div>
       </div>
 

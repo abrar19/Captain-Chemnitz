@@ -8,7 +8,8 @@ using Microsoft.IdentityModel.Tokens;
 var builder = WebApplication.CreateBuilder(args);
 
 //JWT
-var key = "JwtSettings:SecretKey";
+var key = builder.Configuration["JwtSettings:SecretKey"]
+          ?? throw new InvalidOperationException("JWT Secret Key not configured.");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -54,6 +55,9 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+//Cross origin access
+app.UseCors("AllowReactApp");
+
 //Use JWT
 app.UseAuthentication();
 app.UseAuthorization();
@@ -67,8 +71,6 @@ if (app.Environment.IsDevelopment())
 
 // Enables HTTPS redirection
 app.UseHttpsRedirection();
-
-app.UseCors("AllowReactApp");
 
 // Enables routing for API controllers
 app.MapControllers();
