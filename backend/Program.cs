@@ -13,6 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<APIDbContext>(options =>
 {
+
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
@@ -146,6 +147,13 @@ app.MapControllers();
         
 }*/
 
-await DBSeed.SeedData(app,builder.Configuration);
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<APIDbContext>();
+    db.Database.Migrate();
+}
+
+
+ await DBSeed.SeedData(app,builder.Configuration);
 
 app.Run();

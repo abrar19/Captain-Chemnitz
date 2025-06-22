@@ -11,6 +11,9 @@ services:
     environment:
       SA_PASSWORD: "Passw0rd"
       ACCEPT_EULA: "Y"
+    networks:
+      - dbw_network
+
 
   backend:
     build: ./backend
@@ -21,9 +24,9 @@ services:
     depends_on:
       - mssql_db
     environment:
-      - ConnectionStrings__DefaultConnection=Server=mssql_db;Database=DBW25;User Id=sa;Password=Passw0rd
+      - ConnectionStrings__DefaultConnection=Server=mssql_db,1433;Database=DBW25;User Id=sa;Password=Passw0rd;TrustServerCertificate=True
     networks:
-      dbw_network:
+      - dbw_network
 
 
 
@@ -40,6 +43,8 @@ services:
     tty: true
     environment:
       - VITE_API_URL=http://localhost:8000
+    networks:
+      - dbw_network
 
 
 networks:

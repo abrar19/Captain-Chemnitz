@@ -20,4 +20,9 @@ RUN dotnet publish "backend.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:U
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+
+#COPY wait-for-mssql.sh /wait-for-mssql.sh
+
+
+#ENTRYPOINT ["/wait-for-mssql.sh", "dotnet", "backend.dll"]
 ENTRYPOINT ["dotnet", "backend.dll"]
