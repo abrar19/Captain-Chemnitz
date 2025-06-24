@@ -60,7 +60,7 @@ public class UserController : ControllerBase
         var favorite = new FavoritePlace
         {
             Name = favoriteDto.Name,
-            Description = favoriteDto.Description,
+            LocationId = favoriteDto.LocationId,
             UserId = userId
         };
 
@@ -71,7 +71,7 @@ public class UserController : ControllerBase
         {
             Id = favorite.Id,
             Name = favorite.Name,
-            Description = favorite.Description
+            LocationId = favorite.LocationId
         });
     }
 
@@ -84,6 +84,22 @@ public class UserController : ControllerBase
             .ToListAsync();
 
         return Ok(favorites);
+    }
+
+    [Authorize]
+    [HttpDelete("{userId}/favorites/{favoriteId}")]
+    public async Task<IActionResult> RemoveFavorite(int userId, int favoriteId)
+    {
+        var favorite = await _context.FavoritePlaces
+            .FirstOrDefaultAsync(f => f.UserId == userId && f.Id == favoriteId);
+
+        if (favorite == null)
+            return NotFound("Favorite not found.");
+
+        _context.FavoritePlaces.Remove(favorite);
+        await _context.SaveChangesAsync();
+
+        return NoContent(); // 204 success
     }
 
     [Authorize]

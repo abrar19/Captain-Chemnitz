@@ -293,7 +293,7 @@ function MapView() {
         },
         body: JSON.stringify({
           name: place.properties.name,
-          description: place.properties.description || 'No description'
+          locationId: place.id 
         })
       });
   
