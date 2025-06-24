@@ -18,9 +18,7 @@ function App() {
         <Route
           path="/"
           element={
-            <ProtectedRoute>
               <MapView />
-            </ProtectedRoute>
           }
         />
         <Route
