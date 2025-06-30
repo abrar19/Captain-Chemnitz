@@ -30,10 +30,21 @@ A full-stack web application that displays geo-located points of interest on an 
 ---
 
 ## 🔧 Setup Instructions
-
-### 🖥️ Frontend
-
+ 1. Clone the repository
 ```bash
-cd frontend
-npm install
-npm run dev
+    git clone url-to-repo
+
+
+```
+ 2. Run the Database
+```bash
+    docker-compose up mssql_db
+```
+ 3. Configure the backend and frontend
+
+
+4. Run the Backend and Frontend
+```bash
+    docker-compose up backend frontend
+
+

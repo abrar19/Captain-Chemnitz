@@ -81,6 +81,8 @@ builder.Services.Configure<IdentityOptions>(options =>
         options.Password.RequireLowercase = false;
         options.Password.RequireUppercase = false;
         options.Password.RequiredLength = 6;
+        options.SignIn.RequireConfirmedEmail = false;
+        options.User.RequireUniqueEmail = true;
     }
 );
 
@@ -135,6 +137,11 @@ app.UseSwagger(options =>
     options.Equals(true);
 });
 
+
+app.UseCors(options =>
+    options.WithOrigins("http://localhost:3000")
+        .AllowAnyHeader()
+        .AllowAnyMethod());
 
 
 app.UseAuthorization();

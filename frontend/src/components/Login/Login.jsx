@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './login.css';
+import {APIEndpoints} from "../../constants/APIEndpoints.js";
 
 function Login() {
   const navigate = useNavigate();
@@ -12,12 +13,18 @@ function Login() {
     e.preventDefault();
   
     try {
-      const response = await fetch('http://localhost:5029/api/user/login', {
+
+      const response = await fetch(APIEndpoints.login, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ username, password })
+      // body:
+        // {
+      //   "email": "string",
+      //     "password": "string"
+      // }
+        body: JSON.stringify({ "email": username, "password": password })
       });
   
       if (response.ok) {
@@ -26,12 +33,17 @@ function Login() {
         // Save token + userId in localStorage
         localStorage.setItem('token', JSON.stringify({
           token: data.token,
-          userId: data.userId
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          role: data.role,
         }));
   
         navigate('/');
-      } else {
-        setError('Invalid credentials');
+      }else {
+        const data = await response.json();
+        setError(`Login failed: ${data.message || 'Something went wrong'}`);
+
       }
     } catch (err) {
       setError('Error connecting to server');
@@ -46,7 +58,7 @@ function Login() {
         {error && <p className="error-text">{error}</p>}
         <input
           type="text"
-          placeholder="Username or Email"
+          placeholder="Email"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           required

@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import {APIEndpoints as ApiEndpoints} from "../../constants/APIEndpoints.js";
 
 function Register() {
 
   const [email, setEmail] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
 
@@ -13,20 +16,20 @@ function Register() {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://localhost:5029/api/user/register', {
+      const response = await fetch(ApiEndpoints.register, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ username: email, password })
+        body: JSON.stringify({ "email": email, "firstName": firstName, "lastName": lastName, "password": password })
       });
 
       if (response.ok) {
         setMessage('Registration successful!');
         navigate('/login');
       } else {
-        const errorText = await response.text();
-        setMessage(`Registration failed: ${errorText}`);
+        const data = await response.json();
+        setMessage(`Login failed: ${data.message || 'Something went wrong'}`);
       }
     } catch (err) {
       setMessage('Error connecting to server');
@@ -46,6 +49,25 @@ function Register() {
           onChange={(e) => setEmail(e.target.value)}
           required 
         />
+
+        <input
+            type="text"
+            placeholder="First Name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            required
+        />
+
+        <input
+            type="text"
+            placeholder="Last Name"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            required
+        />
+
+
+
         <input 
           type="password" 
           placeholder="Password"
