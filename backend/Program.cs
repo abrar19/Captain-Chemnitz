@@ -14,7 +14,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<APIDbContext>(options =>
 {
 
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlServerOptions => sqlServerOptions.UseNetTopologySuite());
+    ;
 });
 
 
@@ -157,10 +159,12 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<APIDbContext>();
-    db.Database.Migrate();
+    await db.Database.MigrateAsync();
+    
+    await DBSeed.SeedData(app,builder.Configuration);
 }
 
 
- await DBSeed.SeedData(app,builder.Configuration);
+ 
 
 app.Run();

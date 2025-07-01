@@ -15,4 +15,6 @@ public class APIDbContext: IdentityDbContext
     public DbSet<ApplicationUserModel> applicationUsers { get; set; }
     
     public DbSet<ProfileModel> profiles { get; set; }
+    
+    public DbSet<CulturalSiteModel> culturalSites { get; set; }
 }
