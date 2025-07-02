@@ -67,8 +67,11 @@ public class DBSeed
         
         
 
+        String filePath =  Path.Combine(Directory.GetCurrentDirectory(), "Data", "Chemnitz.geojson");
+        String path = Environment.CurrentDirectory;
+        Console.WriteLine(path);
 
-        var geoJson = await File.ReadAllTextAsync("Data/Chemnitz.geojson");
+        var geoJson = await File.ReadAllTextAsync(filePath);
         
 
 

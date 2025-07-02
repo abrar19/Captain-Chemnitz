@@ -20,6 +20,7 @@ RUN dotnet publish "backend.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:U
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+COPY Data/Chemnitz.geojson ./Data/Chemnitz.geojson
 
 #COPY wait-for-mssql.sh /wait-for-mssql.sh
 
