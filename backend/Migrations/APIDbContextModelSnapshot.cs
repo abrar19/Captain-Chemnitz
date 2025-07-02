@@ -414,7 +414,7 @@ namespace backend.Migrations
                     b.Property<string>("culturalSiteModelCulturalSiteId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("userEmail")
+                    b.Property<string>("profileModelEmail")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
@@ -422,7 +422,7 @@ namespace backend.Migrations
 
                     b.HasIndex("culturalSiteModelCulturalSiteId");
 
-                    b.HasIndex("userEmail");
+                    b.HasIndex("profileModelEmail");
 
                     b.ToTable("favoriteSites");
                 });
@@ -509,20 +509,20 @@ namespace backend.Migrations
                         .WithMany()
                         .HasForeignKey("culturalSiteModelCulturalSiteId");
 
-                    b.HasOne("backend.Models.Entity.ProfileModel", "user")
-                        .WithMany("FavoriteSites")
-                        .HasForeignKey("userEmail")
+                    b.HasOne("backend.Models.Entity.ProfileModel", "profileModel")
+                        .WithMany("FavoriteSiteModels")
+                        .HasForeignKey("profileModelEmail")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("culturalSiteModel");
 
-                    b.Navigation("user");
+                    b.Navigation("profileModel");
                 });
 
             modelBuilder.Entity("backend.Models.Entity.ProfileModel", b =>
                 {
-                    b.Navigation("FavoriteSites");
+                    b.Navigation("FavoriteSiteModels");
                 });
 #pragma warning restore 612, 618
         }

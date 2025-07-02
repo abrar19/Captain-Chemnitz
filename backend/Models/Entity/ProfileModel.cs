@@ -13,6 +13,6 @@ public class ProfileModel
     public string LastName { get; set; }
     
     
-    public ICollection<FavoriteSiteModel> FavoriteSites { get; set; }
+    public ICollection<FavoriteSiteModel> FavoriteSiteModels { get; }
 
 }

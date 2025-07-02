@@ -55,57 +55,7 @@ public class CulturalSiteController: ControllerBase
     }
     
     
-    //add to favorites
-    [HttpPost("addToFavorites")]
-    [Authorize(Roles = "AppUsers")]
-    public async Task<IActionResult> AddToFavorites(AddFavoriteRequestModel model)
-    {
-        string userId = User.Claims.First(c => c.Type == "UserID").Value;
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user == null)
-        {
-            return Unauthorized(new ErrorReponseModel
-            {
-                error = "Unauthorized",
-                message = "You must be logged in to add favorites."
-            });
-        }
-
-        var culturalSite = await _apiDbContext.culturalSites.FindAsync(model.CulturalSiteId);
-        if (culturalSite == null)
-        {
-            return NotFound(new ErrorReponseModel
-            {
-                error = "Not Found",
-                message = "Cultural site not found."
-            });
-        }
-
-        ProfileModel profile = await _apiDbContext.profiles.FirstOrDefaultAsync(x => x.Email == user.Email);
-        // Check if the site is already in favorites
-        if (profile.FavoriteSites.Any(fs => fs.CulturalSiteId == model.CulturalSiteId))
-        {
-            return BadRequest(new ErrorReponseModel
-            {
-                error = "Already Exists",
-                message = "This cultural site is already in your favorites."
-            });
-        }
-        
-        FavoriteSiteModel favoriteSite = new FavoriteSiteModel
-        {
-            CulturalSiteId = model.CulturalSiteId,
-            user = profile,
-            Email = user.Email
-        };
-
-        profile.FavoriteSites.Add(favoriteSite);
-        _apiDbContext.favoriteSites.Add(favoriteSite);
-        await _apiDbContext.SaveChangesAsync();
-
-        return Ok(new { message = "Cultural site added to favorites successfully." });
-    }
-
+  
 
 
 

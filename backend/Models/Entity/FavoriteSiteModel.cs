@@ -8,8 +8,8 @@ public class FavoriteSiteModel
     [Required]
     public int FavoriteSiteId { get; set; }
 
-    public String Email { get; set; }
-    public ProfileModel user { get; set; }
+    public string Email { get; set; }
+    public ProfileModel profileModel { get; set; }
 
     public string CulturalSiteId { get; set; }
     public CulturalSiteModel culturalSiteModel { get; set; }
