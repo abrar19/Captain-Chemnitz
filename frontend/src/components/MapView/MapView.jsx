@@ -71,7 +71,7 @@ function MapView() {
           const userLng = position.coords.longitude;
           const userLat = position.coords.latitude;
     
-          setUserLocation([userLng, userLat]); // ✅ moved inside
+          setUserLocation([userLng, userLat]);
     
           const userMarker = new mapboxgl.Marker({
             color: 'blue'
@@ -106,7 +106,6 @@ function MapView() {
          throw new Error('Failed to fetch cultural sites');
        }
        var data= await res.json();
-       console.log(data);
        setFeatures(data);
      });
 
@@ -144,13 +143,13 @@ function MapView() {
   // Update map markers when search changes
   useEffect(() => {
 
-    if (!searchTerm.trim()) {
-      // Remove all existing markers
-      markersRef.current.forEach(marker => marker.remove());
-      markersRef.current = [];
-      removeRoute(); // If no markers will be shown, remove the route
-      return;
-    }
+    // if (!searchTerm.trim()) {
+    //   // Remove all existing markers
+    //   markersRef.current.forEach(marker => marker.remove());
+    //   markersRef.current = [];
+    //   removeRoute(); // If no markers will be shown, remove the route
+    //   return;
+    // }
 
 
     // Remove previous markers
@@ -287,8 +286,12 @@ function MapView() {
   //Logout
   const handleLogout = () => {
     localStorage.removeItem("token"); // or localStorage.clear() if you want to wipe all
-    navigate("/login"); // Redirect to login page
+    navigate("/"); // Redirect to login page
   };
+
+  //Logged in check
+  const isLoggedIn = () => !!localStorage.getItem("token");
+
   
   
 
@@ -349,15 +352,19 @@ function MapView() {
               <strong>{feature.properties.name}</strong><br />
               <a href={feature.properties.website} target="_blank" rel="noreferrer">Website</a>
               <Link to={`/location/${encodeURIComponent(feature.id)}`} className="details-link">View Details</Link>
-              <button
-              className="favorite-button"
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent map zoom trigger
-                addToFavorites(feature);
-              }}
-            >
-              ⭐ Add to Favorites
-            </button>
+              
+              {localStorage.getItem("token") && (
+                <button
+                  className="favorite-button"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent map zoom trigger
+                    addToFavorites(feature);
+                  }}
+                >
+                  ⭐ Add to Favorites
+                </button>
+              )}
+
               <button 
                 className="direction-button"
                 onClick={() => handleShowDirections(feature.geometry.coordinates)}
@@ -368,17 +375,6 @@ function MapView() {
           ))}
         </ul>
 
-      </div>
-      
-      {/* Floating Circular Dropdown Menu */}
-      <div className="floating-menu">
-        <input type="checkbox" id="menu-toggle" className="menu-toggle" />
-        <label htmlFor="menu-toggle" className="menu-button">☰</label>
-        <div className="menu-items">
-          <Link to="/favorites" className="menu-item" title="Favorites">⭐</Link>
-          <Link to="/profile" className="menu-item" title="Edit Profile">📝</Link>
-          <button className="menu-item logout-button" onClick={handleLogout} title="Logout">🚪</button>
-        </div>
       </div>
 
       {/* Map container */}
