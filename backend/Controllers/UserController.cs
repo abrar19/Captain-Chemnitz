@@ -198,35 +198,7 @@ public class UserController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Can be access by Unauthorized users. This feature is used to verify email address
-    /// </summary>
-  /*  [HttpGet ("ConfirmEmailAsyncTest")]
-    public async Task<Object> ConfirmEmailAsyncTest(string email, string code)
-    {
-        if (email == null || code == null)
-        {
-            return BadRequest(new { message = "Somting is missing" });
-        }
-
-        var user = await _userManager.FindByEmailAsync(email);
-        if (user == null)
-        {
-            return BadRequest(new { message = "User not found" });
-        }
-
-        var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-        var result = await _userManager.ConfirmEmailAsync(user, token);
-
-        if (result.Succeeded)
-        {
-            return Ok(new { Message = "Verification Succeeded" });
-        }
-        else
-        {
-            return Ok(new { Message = "Verification Failed" });
-        }
-    }*/
+  
     
     
   

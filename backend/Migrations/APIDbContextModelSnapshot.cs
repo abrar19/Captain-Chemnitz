@@ -395,6 +395,38 @@ namespace backend.Migrations
                     b.ToTable("culturalSites");
                 });
 
+            modelBuilder.Entity("backend.Models.Entity.FavoriteSiteModel", b =>
+                {
+                    b.Property<int>("FavoriteSiteId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FavoriteSiteId"));
+
+                    b.Property<string>("CulturalSiteId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("culturalSiteModelCulturalSiteId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("userEmail")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("FavoriteSiteId");
+
+                    b.HasIndex("culturalSiteModelCulturalSiteId");
+
+                    b.HasIndex("userEmail");
+
+                    b.ToTable("favoriteSites");
+                });
+
             modelBuilder.Entity("backend.Models.Entity.ProfileModel", b =>
                 {
                     b.Property<string>("Email")
@@ -469,6 +501,28 @@ namespace backend.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("backend.Models.Entity.FavoriteSiteModel", b =>
+                {
+                    b.HasOne("backend.Models.Entity.CulturalSiteModel", "culturalSiteModel")
+                        .WithMany()
+                        .HasForeignKey("culturalSiteModelCulturalSiteId");
+
+                    b.HasOne("backend.Models.Entity.ProfileModel", "user")
+                        .WithMany("FavoriteSites")
+                        .HasForeignKey("userEmail")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("culturalSiteModel");
+
+                    b.Navigation("user");
+                });
+
+            modelBuilder.Entity("backend.Models.Entity.ProfileModel", b =>
+                {
+                    b.Navigation("FavoriteSites");
                 });
 #pragma warning restore 612, 618
         }

@@ -5,6 +5,7 @@ import mapboxgl from 'mapbox-gl'
 
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './mapView.css'
+import {APIEndpoints} from "../../constants/APIEndpoints.js";
 
 function MapView() {
 
@@ -92,11 +93,22 @@ function MapView() {
     
 
   // Fetch the geojson
-  fetch("/Chemnitz.geojson") // it's in /public folder
-  .then((res) => res.json())
-  .then((geojsonData) => {
-    setFeatures(geojsonData.features);
-  });
+    /*fetch(APIEndpoints.login) // it's in /public folder
+        .then((res) => res.json())
+        .then((geojsonData) => {
+          setFeatures(geojsonData.features);
+        });*/
+
+     fetch(APIEndpoints.culturalSites, {
+      method: 'GET',
+    }).then(async res => {
+       if (!res.ok) {
+         throw new Error('Failed to fetch cultural sites');
+       }
+       var data= await res.json();
+       console.log(data);
+       setFeatures(data);
+     });
 
     return () => {
       mapRef.current.remove()

@@ -17,4 +17,6 @@ public class APIDbContext: IdentityDbContext
     public DbSet<ProfileModel> profiles { get; set; }
     
     public DbSet<CulturalSiteModel> culturalSites { get; set; }
+    
+    public DbSet<FavoriteSiteModel> favoriteSites { get; set; }
 }
