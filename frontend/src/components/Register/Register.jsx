@@ -25,7 +25,9 @@ function Register() {
       });
 
       if (response.ok) {
-        setMessage('Registration successful!');
+        const data = await response.json();
+        setMessage(data.message);
+        alert(data.message);
         navigate('/login');
       } else {
         const data = await response.json();
@@ -80,6 +82,8 @@ function Register() {
       <p className="login-footer">
         Already have an account? <Link to="/login">Login here</Link>
       </p>
+
+      {message && <div className="message-box">{message}</div>}
     </div>
   );
 }

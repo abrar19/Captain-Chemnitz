@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import MapView from './components/MapView/MapView';
 import LocationDetails from './components/LocationDetails/LocationDetails';
 
@@ -8,21 +8,24 @@ import ProtectedRoute from './ProtectedRoute';
 import Register from './components/Register/Register';
 import Favorites from './components/FavoritesPage/Favorites';
 import EditProfile from './components/EditProfilePage/EditProfile';
+import Header from './components/Header/Header';
+import AdminDashboard from './components/AdminDashboard/AdminDashboard';
 
-function App() {
+function AppWrapper() {
+  const location = useLocation();
+
+  // Hide header on login and register pages
+  const hideHeaderPaths = ['/login', '/register', '/admin'];
+  const shouldShowHeader = !hideHeaderPaths.includes(location.pathname);
+
   return (
-    <Router>
+    <>
+      {shouldShowHeader && <Header />}
+
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <MapView />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/" element={<MapView />} />
         <Route
           path="/favorites"
           element={
@@ -40,7 +43,16 @@ function App() {
           }
         />
         <Route path="/location/:id" element={<LocationDetails />} />
+        <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppWrapper />
     </Router>
   );
 }
