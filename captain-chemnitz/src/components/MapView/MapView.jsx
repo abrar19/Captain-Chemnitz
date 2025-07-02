@@ -27,7 +27,6 @@ function MapView() {
   const searchTerm = useSelector((state) => state.ui.searchTerm);
   const dispatch = useDispatch();
 
-  const [markerMap, setMarkerMap] = useState({});
   const [userLocation, setUserLocation] = useState(null);
   const [message, setMessage] = useState('');
 
