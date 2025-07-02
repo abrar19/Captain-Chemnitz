@@ -7,5 +7,8 @@ export const APIEndpoints = {
     register: `${API_BASE_URL}/User/Registration`,
     login: `${API_BASE_URL}/User/Login`,
     culturalSites: `${API_BASE_URL}/CulturalSite/GetCulturalSites`,
+    getMyFavoriteSites: `${API_BASE_URL}/FavoriteSite/GetFavoriteSites`,
+    deleteFavoriteSite:(id) => `${API_BASE_URL}/FavoriteSite/removeFromFavorites/${id}`,
+    
 
 }

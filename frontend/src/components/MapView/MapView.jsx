@@ -17,7 +17,7 @@ function MapView() {
   const routeLayerIdRef = useRef(null);
 
 
-
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [features, setFeatures] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [markerMap, setMarkerMap] = useState({});
@@ -33,7 +33,11 @@ function MapView() {
     // Add more keys as needed
     return 'unknown';
   };
-  
+
+
+
+
+
 
   const getMarkerEmoji = (type) => {
     switch (type) {
@@ -124,6 +128,8 @@ function MapView() {
     return name && name.includes(term);
   });
 
+
+
   //route removal logic for route cleanup on search cleanup
   const removeRoute = () => {
     const map = mapRef.current;
@@ -138,7 +144,10 @@ function MapView() {
   
     routeLayerIdRef.current = null;
   };
-  
+
+
+
+
 
   // Update map markers when search changes
   useEffect(() => {
@@ -300,6 +309,17 @@ function MapView() {
       {/* Sidebar */}
       <div className="sidebar-panel">
         <h3 className="sidebar-title">Locations</h3>
+        <div className="favorites-toggle">
+          <label>
+            <input
+                type="checkbox"
+                checked={showFavoritesOnly}
+                onChange={() => setShowFavoritesOnly(!showFavoritesOnly)}
+            />
+            Show Favorites Only
+          </label>
+        </div>
+
         {message && (
           <div className="message-box">
             {message}
@@ -327,7 +347,7 @@ function MapView() {
           )}
         </div>
         <ul className="location-list">
-          {searchTerm.trim() && filteredFeatures.map((feature) => (
+          {searchTerm.trim() &&  filteredFeatures.map((feature) => (
             <li 
               key={feature.id} 
               className="location-item"
@@ -352,8 +372,9 @@ function MapView() {
               <strong>{feature.properties.name}</strong><br />
               <a href={feature.properties.website} target="_blank" rel="noreferrer">Website</a>
               <Link to={`/location/${encodeURIComponent(feature.id)}`} className="details-link">View Details</Link>
-              
+
               {localStorage.getItem("token") && (
+
                 <button
                   className="favorite-button"
                   onClick={(e) => {
@@ -365,7 +386,10 @@ function MapView() {
                 </button>
               )}
 
-              <button 
+
+
+
+              <button
                 className="direction-button"
                 onClick={() => handleShowDirections(feature.geometry.coordinates)}
               >

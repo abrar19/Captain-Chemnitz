@@ -1,6 +1,7 @@
 using backend.Models.Entity;
 using Microsoft.AspNetCore.Mvc;
 using System.IO;
+using System.Security.Claims;
 using System.Text.Json;
 using backend.Data;
 using backend.Models.DTOs;
@@ -31,8 +32,9 @@ public class CulturalSiteController: ControllerBase
     [Route("GetCulturalSites")]
     public async Task<IActionResult> GetCulturalSites()
     {
+        
         var culturalSites = _apiDbContext.culturalSites.Select(model => new CultureSiteResponseModel(model));
-
+      
         return Ok(culturalSites.ToList());
     }
     

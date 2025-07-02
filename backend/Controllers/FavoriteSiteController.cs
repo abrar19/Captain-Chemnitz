@@ -106,7 +106,8 @@ public class FavoriteSiteController: ControllerBase
     }
 
     
-    [HttpGet("getFavoriteSites")]
+    [HttpGet()]
+    [Route("GetFavoriteSites")]
     [Authorize(Roles = "AppUsers")]
     public async Task<IActionResult> GetFavoriteSites()
     {

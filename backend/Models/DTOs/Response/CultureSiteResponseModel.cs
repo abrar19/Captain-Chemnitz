@@ -16,7 +16,21 @@ public class CultureSiteResponseModel
         {
             CulturalSiteId = culturalSite.CulturalSiteId,
             name = culturalSite.Name,
-            website = culturalSite.Website
+            website = culturalSite.Website,
+            Tourism = culturalSite.Tourism,
+            Museum = culturalSite.Museum,
+            Operator = culturalSite.Operator,
+            Wheelchair = culturalSite.Wheelchair,
+            Wikidata = culturalSite.Wikidata,
+            Landuse = culturalSite.Landuse,
+            AddrCity = culturalSite.AddrCity,
+            AddrHousenumber = culturalSite.AddrHousenumber,
+            AddrPostcode = culturalSite.AddrPostcode,
+            AddrStreet = culturalSite.AddrStreet,
+            Amenity = culturalSite.Amenity,
+            OpeningHours = culturalSite.OpeningHours
+            
+            
         };
     }
     
@@ -37,6 +51,29 @@ public class Properties
     public string CulturalSiteId { get; set; }
     public string name { get; set; }
     public string website { get; set; }
+    
+  
+    
+    
+    public string? Landuse { get; set; } 
+    public string Museum { get; set; }  
+    public string Operator { get; set; }
+    public string Tourism { get; set; }
+    public string Wheelchair { get; set; }
+    public string Wikidata { get; set; }
+    
+    
+    
+    public string AddrCity { get; set; }
+    public string AddrHousenumber { get; set; }
+    public string AddrPostcode { get; set; }
+    public string AddrStreet { get; set; }
+    
+    public string Amenity { get; set; }
+    
+    public string OpeningHours { get; set; }
+    
+    
 }
 
 
