@@ -140,6 +140,15 @@ public class UserController : ControllerBase
                 return BadRequest( new ErrorReponseModel { error = "Email Not Confirmed" ,
                     message = "Please confirm your email address before logging in." });
             }
+            if(!user.IsActive)
+            {
+                return BadRequest(new ErrorReponseModel
+                {
+                    error = "Account Deactivated",
+                    message = "Your account has been deactivated. Please contact support."
+                });
+            }
+            
             var role = await _userManager.GetRolesAsync(user);
             IdentityOptions _options = new IdentityOptions();
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -318,7 +327,7 @@ public class UserController : ControllerBase
     }
     
     
-    /*//soft delete user
+    //soft delete user
     [HttpPost]
     [Route("DeleteUser")]
     [ProducesResponseType(statusCode: StatusCodes.Status200OK, Type = typeof(string))]
@@ -346,7 +355,18 @@ public class UserController : ControllerBase
             });
         }
 
-        user. = true; // Soft delete
+        if (!user.IsActive)
+        {
+            return BadRequest(
+                new ErrorReponseModel
+                {
+                    error = "Account Already Deleted",
+                    message = "Your account has already been deleted."
+                });
+        }
+
+        
+        user.IsActive = false; 
         var result = await _userManager.UpdateAsync(user);
         
         if (result.Succeeded)
@@ -359,7 +379,42 @@ public class UserController : ControllerBase
             error = "Delete Failed",
             message = "There was an error deleting the user account. Please try again."
         });
-    }*/
+        
+        
+    }
+    
+    //Get All Inactive Users
+    [HttpGet]
+    [Route("GetInactiveUsers")]
+    [ProducesResponseType(statusCode: StatusCodes.Status200OK, Type = typeof(List<ApplicationUserModel>))]
+    [ProducesResponseType(statusCode: StatusCodes.Status400BadRequest, Type = typeof(ErrorReponseModel))]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetInactiveUsers()
+    {
+        var inactiveUsers = await _userManager.Users
+            .Where(u => !u.IsActive)
+            .Select(user=>new InActiveUserResponseModel
+            {
+                
+                Email = user.Email,
+                FirstName = _context.profiles.FirstOrDefault(p => p.Email == user.Email).FirstName,
+                LastName = _context.profiles.FirstOrDefault(p => p.Email == user.Email).LastName,
+            })
+            .ToListAsync();
+
+        if (inactiveUsers == null || inactiveUsers.Count == 0)
+        {
+            return NotFound(new ErrorReponseModel
+            {
+                error = "No Inactive Users",
+                message = "There are no inactive users in the system."
+            });
+        }
+
+        return Ok( inactiveUsers);
+    }
+    
+    
     
   
 }

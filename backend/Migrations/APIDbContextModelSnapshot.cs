@@ -449,6 +449,9 @@ namespace backend.Migrations
                 {
                     b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUser");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.HasDiscriminator().HasValue("ApplicationUserModel");
                 });
 
