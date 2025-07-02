@@ -7,6 +7,7 @@ using backend.Models.DTOs.Response;
 using backend.Models.Entity;
 using backend.Models.Settings;
 using backend.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -199,7 +200,166 @@ public class UserController : ControllerBase
     }
 
   
+    //user password update with old password and new password
+    [HttpPost]
+    [Route("UpdatePassword")]
+    [ProducesResponseType(statusCode:StatusCodes.Status200OK, Type = typeof(string))]
+    [ProducesResponseType(statusCode:StatusCodes.Status400BadRequest, Type = typeof(ErrorReponseModel))]
+    [Authorize(Roles = "AppUsers")]
+    public async Task<IActionResult> UpdatePassword(UpdatePasswordRequestModel model)
+    {
+        
+        
+        var userId = User.Claims.FirstOrDefault(c => c.Type == "UserID")?.Value;
+        if (userId == null)
+        {
+            return Unauthorized(new ErrorReponseModel
+            {
+                error = "Unauthorized",
+                message = "You must be logged in to update your password."
+            });
+        }
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            return NotFound(new ErrorReponseModel
+            {
+                error = "User Not Found",
+                message = "The user does not exist."
+            });
+        }
+
+        var result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
+        if (result.Succeeded)
+        {
+            return Ok("Password updated successfully.");
+        }
+        
+        return BadRequest(new ErrorReponseModel
+        {
+            error = "Update Failed",
+            message = "There was an error updating the password. Please try again."
+        });
+    }
     
+    
+    //user profile update
+    [HttpPost]
+    [Route("UpdateProfile")]
+    [ProducesResponseType(statusCode: StatusCodes.Status200OK, Type = typeof(ProfileModel))]
+    [ProducesResponseType(statusCode: StatusCodes.Status400BadRequest, Type = typeof(ErrorReponseModel))]
+    [Authorize(Roles = "AppUsers")]
+    public async Task<IActionResult> UpdateProfile(ProfileUpdateRequestModel model)
+    {
+        if (model == null)
+        {
+            return BadRequest(new ErrorReponseModel
+            {
+                error = "Invalid Data",
+                message = "Profile update data is missing or invalid."
+            });
+        }else if (string.IsNullOrEmpty(model.FirstName) && string.IsNullOrEmpty(model.LastName) )
+        {
+            return BadRequest(new ErrorReponseModel
+            {
+                error = "No Data Provided",
+                message = "At least one field (First Name, Last Name) must be provided to update the profile."
+            });
+        }
+        else
+        {
+            var userId = User.Claims.FirstOrDefault(c => c.Type == "UserID")?.Value;
+            if (userId == null)
+            {
+                return Unauthorized(new ErrorReponseModel
+                {
+                    error = "Unauthorized",
+                    message = "You must be logged in to update your profile."
+                });
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound(new ErrorReponseModel
+                {
+                    error = "User Not Found",
+                    message = "The user does not exist."
+                });
+            }
+
+            ProfileModel profile = await _context.profiles.FirstOrDefaultAsync(x => x.Email == user.Email);
+            if (profile == null)
+            {
+                return NotFound(new ErrorReponseModel
+                {
+                    error = "Profile Not Found",
+                    message = "The profile does not exist."
+                });
+            }
+
+            if (!string.IsNullOrEmpty(model.FirstName))
+            {
+                profile.FirstName = model.FirstName;
+            }
+            
+            if (!string.IsNullOrEmpty(model.LastName))
+            {
+                profile.LastName = model.LastName;
+            }
+
+            var result=  _context.profiles.Update(profile);
+            await _context.SaveChangesAsync();
+
+            return Ok( new UpdateProfileResponseModel(profile));
+        }
+        
+    }
+    
+    
+    /*//soft delete user
+    [HttpPost]
+    [Route("DeleteUser")]
+    [ProducesResponseType(statusCode: StatusCodes.Status200OK, Type = typeof(string))]
+    [ProducesResponseType(statusCode: StatusCodes.Status400BadRequest, Type = typeof(ErrorReponseModel))]
+    [Authorize(Roles = "AppUsers")]
+    public async Task<IActionResult> DeleteUser()
+    {
+        var userId = User.Claims.FirstOrDefault(c => c.Type == "UserID")?.Value;
+        if (userId == null)
+        {
+            return Unauthorized(new ErrorReponseModel
+            {
+                error = "Unauthorized",
+                message = "You must be logged in to delete your account."
+            });
+        }
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            return NotFound(new ErrorReponseModel
+            {
+                error = "User Not Found",
+                message = "The user does not exist."
+            });
+        }
+
+        user. = true; // Soft delete
+        var result = await _userManager.UpdateAsync(user);
+        
+        if (result.Succeeded)
+        {
+            return Ok("User account deleted successfully.");
+        }
+        
+        return BadRequest(new ErrorReponseModel
+        {
+            error = "Delete Failed",
+            message = "There was an error deleting the user account. Please try again."
+        });
+    }*/
     
   
 }
