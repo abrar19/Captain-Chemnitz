@@ -30,6 +30,7 @@ builder.Services.AddIdentity<ApplicationUserModel, IdentityRole>(options =>
 
 
 builder.Services.AddControllers();
+builder.Services.AddHttpClient();
 
 
 

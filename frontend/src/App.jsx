@@ -10,6 +10,7 @@ import Favorites from './components/FavoritesPage/Favorites';
 import EditProfile from './components/EditProfilePage/EditProfile';
 import Header from './components/Header/Header';
 import AdminDashboard from './components/AdminDashboard/AdminDashboard';
+import AdminUserDashboard from "./components/AdminDashboard/AdminUserDashboard.jsx";
 
 function AppWrapper() {
   const location = useLocation();
@@ -44,6 +45,7 @@ function AppWrapper() {
         />
         <Route path="/location/:id" element={<LocationDetails />} />
         <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/users" element={<AdminUserDashboard />} />
       </Routes>
     </>
   );
