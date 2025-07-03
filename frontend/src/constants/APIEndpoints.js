@@ -19,7 +19,7 @@ export const APIEndpoints = {
     getAdminDashboardData: `${API_BASE_URL}/Admin/GetDashboardStatistics`,
     getAllUsers: `${API_BASE_URL}/Admin/GetAllUsers`,
     getActiveUsers: `${API_BASE_URL}/Admin/getAllActiveUsers`,
-    getAllInactiveUsers: `${API_BASE_URL}/Admin/getAllInactiveUsers`,
+    syncWithOverPass: `${API_BASE_URL}/Admin/SyncOverpassData`,
 
 
 }

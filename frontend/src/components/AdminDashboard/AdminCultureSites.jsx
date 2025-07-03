@@ -4,10 +4,11 @@ import {APIEndpoints} from "../../constants/APIEndpoints.js";
 import {jwtDecode} from "jwt-decode";
 import {Table} from "react-bootstrap";
 import Form from "react-bootstrap/Form";
+import Button from "react-bootstrap/Button";
 
 
 
-function AdminUserDashboard() {
+function AdminCultureSites() {
 
 
     const isTokenExpired = (token) => {
@@ -35,22 +36,46 @@ function AdminUserDashboard() {
     };
 
 
-    const [users, setUsers] = useState([]);
+    const [cultureSites, setCultureSites] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [showInactiveUsers, setShowInactiveUsers] = useState(false);
+    const [isSyncing, setIsSyncing] = useState(false);
+
+    const syncWithOverPass = async () => {
+        try {
+            setIsSyncing(true);
+            const tokenData = JSON.parse(localStorage.getItem('token'));
+            const token = tokenData?.token;
+
+            const response = await fetch(APIEndpoints.syncWithOverPass, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch users');
+            }
+            alert("Cultural Sites Synced Successfully");
+        } catch (error) {
+            console.error('Error syncing cultural sites:', error);
+        } finally {
+            setIsSyncing(false);
+        }
+    }
 
 
 
 
 
-    const fetchUsers = async (isInactive) => {
+
+    const fetchUsers = async () => {
         try {
             setIsLoading(true);
             const tokenData = JSON.parse(localStorage.getItem('token'));
             const token = tokenData?.token;
 
-            var endPoint = isInactive? APIEndpoints.getAllInactiveUsers: APIEndpoints.getAllUsers;
-            const response = await fetch(endPoint, {
+            const response = await fetch(APIEndpoints.culturalSites, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -62,7 +87,7 @@ function AdminUserDashboard() {
             }
 
             const data = await response.json();
-            setUsers(data);
+            setCultureSites(data);
         } catch (error) {
             console.error('Error fetching users:', error);
         } finally {
@@ -77,14 +102,10 @@ function AdminUserDashboard() {
             return;
         }
 
-        fetchUsers(false);
+        fetchUsers();
     }, []);
 
-    function  handleTypeChange(e) {
-        setShowInactiveUsers(e.target.checked);
-        console.log(showInactiveUsers);
-        fetchUsers(e.target.checked);
-    }
+
 
     return(
         <div className="dashboard">
@@ -101,23 +122,28 @@ function AdminUserDashboard() {
 
 
             <main className="main-content">
-              <h2>Users</h2>
+                <h2>Culture Sites</h2>
                 {isLoading ? (
                     <div className="loading">
-                    <p>Loading users...</p>
+                        <p>Loading...</p>
                     </div>
                 ) : (
                     <div className="user-list">
 
-                        <Form>
-                            <Form.Check // prettier-ignore
-                                type="switch"
-                                id="custom-switch"
-                                checked={showInactiveUsers}
-                                onChange={handleTypeChange}
-                                label="Show Only Inactive Users"
-                            />
-                        </Form>
+                        <Card className="mb-3">
+                            <Card.Body>
+                                <Card.Title>Total Culture Sites: {cultureSites.length}</Card.Title>
+                                <Card.Text>
+                                    <Button isSyncing variant="primary"  onClick={
+
+                                    () => {
+                                        if (isSyncing) return;
+                                        syncWithOverPass();
+                                    }
+                                   }>{isSyncing? "Syncing":"Sync With OverPass"}</Button>
+                                </Card.Text>
+                            </Card.Body>
+                        </Card>
 
                         <Table striped bordered hover>
                             <thead>
@@ -129,31 +155,13 @@ function AdminUserDashboard() {
                             </tr>
                             </thead>
                             <tbody>
-                            {/*<tr>*/}
-                            {/*    <td>1</td>*/}
-                            {/*    <td>Mark</td>*/}
-                            {/*    <td>Otto</td>*/}
-                            {/*    <td>@mdo</td>*/}
-                            {/*</tr>*/}
-                            {/*<tr>*/}
-                            {/*    <td>2</td>*/}
-                            {/*    <td>Jacob</td>*/}
-                            {/*    <td>Thornton</td>*/}
-                            {/*    <td>@fat</td>*/}
-                            {/*</tr>*/}
-                            {/*<tr>*/}
-                            {/*    <td>3</td>*/}
-                            {/*    <td colSpan={2}>Larry the Bird</td>*/}
-                            {/*    <td>@twitter</td>*/}
-                            {/*</tr>*/}
-                            {users.map((user, index) => (
+
+                            {cultureSites.map((site, index) => (
                                 <tr key={index}>
                                     <td>{index + 1}</td>
-                                    <td>{user.firstName}</td>
-                                    <td>{user.lastName}</td>
-                                    <td>{user.email } {user.emailVerified && (
-                                        <span className="text-success">✅</span>
-                                    )}</td>
+                                    <td>{site.properties.name}</td>
+                                    <td>{extractCategory(site.properties)}</td>
+                                    <td>{getAddress(site.properties)}</td>
                                 </tr>
                             ))}
                             </tbody>
@@ -167,4 +175,43 @@ function AdminUserDashboard() {
     )
 }
 
-export default AdminUserDashboard;
+
+const getMarkerEmoji = (type) => {
+    switch (type) {
+        case 'museum':
+            return '🏛️';
+        case 'restaurant':
+            return '🍽️';
+        case 'cafe':
+            return '☕';
+        case 'hotel':
+            return '🏨';
+        case 'supermarket':
+            return '🛒';
+        case 'park':
+        case 'playground':
+            return '🌳';
+        default:
+            return '📍';
+    }
+};
+
+const extractCategory = (properties) => {
+    // Order matters: check common keys from most to least specific
+    if (properties.tourism) return properties.tourism;
+    if (properties.amenity) return properties.amenity;
+    if (properties.shop) return properties.shop;
+    if (properties.leisure) return properties.leisure;
+    // Add more keys as needed
+    return 'unknown';
+};
+
+
+const getAddress = (properties) => {
+    const { addrStreet, addrHousenumber, addrPostcode, addrCity } = properties;
+    return [addrStreet, addrHousenumber, addrPostcode, addrCity]
+        .filter(Boolean)
+        .join(', ');
+};
+
+export default AdminCultureSites;

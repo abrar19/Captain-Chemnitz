@@ -118,6 +118,7 @@ function AdminDashboard() {
                   <ul className="sidebar-nav">
                       <li><a href="/admin">Dashboard</a></li>
                       <li><a href="/admin/users">Users</a></li>
+                      <li><a href="/admin/culturalsites">CulturalSites</a></li>
                   </ul>
               </nav>
       </aside>
