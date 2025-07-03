@@ -254,7 +254,7 @@ public class UserController : ControllerBase
     
     
     //user profile update
-    [HttpPost]
+    [HttpPut]
     [Route("UpdateProfile")]
     [ProducesResponseType(statusCode: StatusCodes.Status200OK, Type = typeof(ProfileModel))]
     [ProducesResponseType(statusCode: StatusCodes.Status400BadRequest, Type = typeof(ErrorReponseModel))]
@@ -328,7 +328,7 @@ public class UserController : ControllerBase
     
     
     //soft delete user
-    [HttpPost]
+    [HttpDelete]
     [Route("DeleteUser")]
     [ProducesResponseType(statusCode: StatusCodes.Status200OK, Type = typeof(string))]
     [ProducesResponseType(statusCode: StatusCodes.Status400BadRequest, Type = typeof(ErrorReponseModel))]
@@ -414,6 +414,56 @@ public class UserController : ControllerBase
         return Ok( inactiveUsers);
     }
     
+    
+    //get user profile by token
+    [HttpGet]
+    [Route("GetUserProfile")]
+    [ProducesResponseType(statusCode: StatusCodes.Status200OK, Type = typeof(ProfileModel))]
+    [ProducesResponseType(statusCode: StatusCodes.Status400BadRequest, Type = typeof(ErrorReponseModel))]
+    [Authorize(Roles = "AppUsers")]
+    public async Task<IActionResult> GetUserProfile()
+    {
+        var userId = User.Claims.FirstOrDefault(c => c.Type == "UserID")?.Value;
+        if (userId == null)
+        {
+            return Unauthorized(new ErrorReponseModel
+            {
+                error = "Unauthorized",
+                message = "You must be logged in to view your profile."
+            });
+        }
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            return NotFound(new ErrorReponseModel
+            {
+                error = "User Not Found",
+                message = "The user does not exist."
+            });
+        }
+
+        if (!user.IsActive)
+        {
+            return BadRequest(new ErrorReponseModel
+            {
+                error = "Account Deactivated",
+                message = "Your account has been deactivated. Please contact support."
+            }); 
+        }
+
+        ProfileModel profile = await _context.profiles.FirstOrDefaultAsync(x => x.Email == user.Email);
+        if (profile == null)
+        {
+            return NotFound(new ErrorReponseModel
+            {
+                error = "Profile Not Found",
+                message = "The profile does not exist."
+            });
+        }
+
+        return Ok(new UpdateProfileResponseModel(profile));
+    }
     
     
   

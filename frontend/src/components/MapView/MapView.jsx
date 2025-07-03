@@ -207,20 +207,19 @@ function MapView() {
     try {
       const { token, userId } = JSON.parse(tokenData);
   
-      const response = await fetch(`http://localhost:5029/api/user/${userId}/favorites`, {
+      const response = await fetch(APIEndpoints.addFavoriteSite, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}` // Optional if backend checks token
         },
         body: JSON.stringify({
-          name: place.properties.name,
-          description: place.properties.description || 'No description'
+          culturalSiteId: place.culturalSiteId,
         })
       });
   
       if (response.ok) {
-        setMessage(`Added ${place.properties.name} to favorites`);
+        alert(`✅ "${place.properties.name}" added to your favorites!`);
       } else if (response.status === 409) {
         setMessage(`⚠️ "${place.properties.name}" is already in your favorites.`);
       } else {
