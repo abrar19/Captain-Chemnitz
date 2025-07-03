@@ -1,0 +1,55 @@
+version: '3.9'
+
+services:
+  mssql_db:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: mssql_db
+    ports:
+      - "1433:1433"
+    volumes:
+      - ./mssql_data:/var/opt/mssql
+    environment:
+      SA_PASSWORD: "Passw0rd"
+      ACCEPT_EULA: "Y"
+    networks:
+      - dbw_network
+
+
+  backend:
+    build: ./backend
+    container_name: backend
+    ports:
+      - "8080:8080"
+      - "8001:8001"
+    depends_on:
+      - mssql_db
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=mssql_db,1433;Database=DBW25;User Id=sa;Password=Passw0rd;TrustServerCertificate=True
+      - ASPNETCORE_ENVIRONMENT=Development
+    networks:
+      - dbw_network
+
+
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    stdin_open: true
+    tty: true
+    environment:
+      - VITE_API_URL=http://localhost:8080
+    env_file:
+      - .env
+    networks:
+      - dbw_network
+
+
+networks:
+  dbw_network:
+    driver: bridge

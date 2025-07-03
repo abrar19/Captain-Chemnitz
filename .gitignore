@@ -6,3 +6,5 @@ bin/
 obj/
 out/
 backend/LoginApi/.gitignore
+/mssql_data/
+/.env
