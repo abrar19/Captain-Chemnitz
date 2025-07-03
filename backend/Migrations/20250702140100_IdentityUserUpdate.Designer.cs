@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using backend.Data;
@@ -12,9 +13,11 @@ using backend.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(APIDbContext))]
-    partial class APIDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250702140100_IdentityUserUpdate")]
+    partial class IdentityUserUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -445,53 +448,6 @@ namespace backend.Migrations
                     b.ToTable("profiles");
                 });
 
-            modelBuilder.Entity("backend.Models.Entity.ReviewModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CulturalSiteId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CulturalSiteModelCulturalSiteId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ProfileModelEmail")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("Rating")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CulturalSiteModelCulturalSiteId");
-
-                    b.HasIndex("ProfileModelEmail");
-
-                    b.ToTable("reviews");
-                });
-
             modelBuilder.Entity("backend.Models.Entity.ApplicationUserModel", b =>
                 {
                     b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUser");
@@ -568,26 +524,6 @@ namespace backend.Migrations
                     b.Navigation("culturalSiteModel");
 
                     b.Navigation("profileModel");
-                });
-
-            modelBuilder.Entity("backend.Models.Entity.ReviewModel", b =>
-                {
-                    b.HasOne("backend.Models.Entity.CulturalSiteModel", "CulturalSiteModel")
-                        .WithMany("Reviews")
-                        .HasForeignKey("CulturalSiteModelCulturalSiteId");
-
-                    b.HasOne("backend.Models.Entity.ProfileModel", "ProfileModel")
-                        .WithMany()
-                        .HasForeignKey("ProfileModelEmail");
-
-                    b.Navigation("CulturalSiteModel");
-
-                    b.Navigation("ProfileModel");
-                });
-
-            modelBuilder.Entity("backend.Models.Entity.CulturalSiteModel", b =>
-                {
-                    b.Navigation("Reviews");
                 });
 
             modelBuilder.Entity("backend.Models.Entity.ProfileModel", b =>

@@ -1,5 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom';
+import Nav from 'react-bootstrap/Nav';
+import Navbar from 'react-bootstrap/Navbar';
 import './header.css';
+import {Container} from "react-bootstrap";
 
 function Header() {
   const navigate = useNavigate();
@@ -14,7 +17,11 @@ function Header() {
   return (
     <header className="header">
       <div className="header-left">
-        <h1 className="header-title">Captain Chemnitz</h1>
+
+          <Navbar.Brand href="/">Chemnitz Captain</Navbar.Brand>
+
+
+
       </div>
 
       <div className="header-right">

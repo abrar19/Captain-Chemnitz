@@ -6,6 +6,12 @@ import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './mapView.css'
 import {APIEndpoints} from "../../constants/APIEndpoints.js";
+import AddReviewModal from "../AddReview/AddReviewModal.jsx";
+import Button from "react-bootstrap/Button";
+import Modal from "react-bootstrap/Modal";
+import Form from "react-bootstrap/Form";
+import ReviewViewerModal from "../ViewReviews/ReviewViewerModal.jsx";
+
 
 function MapView() {
 
@@ -16,13 +22,25 @@ function MapView() {
   const markersRef = useRef([])
   const routeLayerIdRef = useRef(null);
 
-
-
+  const [favorites, setFavorites] = useState([]);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [features, setFeatures] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [markerMap, setMarkerMap] = useState({});
   const [userLocation, setUserLocation] = useState(null);
   const [message, setMessage] = useState('');
+
+
+
+
+
+
+  const [showReviews, setShowReviews] = useState(false);
+
+
+
+
+
 
   const extractCategory = (properties) => {
     // Order matters: check common keys from most to least specific
@@ -33,7 +51,11 @@ function MapView() {
     // Add more keys as needed
     return 'unknown';
   };
-  
+
+
+
+
+
 
   const getMarkerEmoji = (type) => {
     switch (type) {
@@ -88,6 +110,26 @@ function MapView() {
         },
         { enableHighAccuracy: true }
       );
+
+
+    }
+
+    if(isLoggedIn()) {
+      var tokenData = localStorage.getItem('token');
+      const { token } = JSON.parse(tokenData);
+      fetch(APIEndpoints.getMyFavoriteSites, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` // Optional if backend checks token
+        }
+      }).then(async res => {
+        if (!res.ok) {
+          throw new Error('Failed to fetch cultural sites');
+        }
+        var data= await res.json();
+        setFavorites(data);
+      });
     }
     
     
@@ -114,6 +156,9 @@ function MapView() {
     }
   }, [])
 
+
+
+
   // Filter logic
   const normalize = (str) =>
     str?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -123,6 +168,8 @@ function MapView() {
     const term = normalize(searchTerm);
     return name && name.includes(term);
   });
+
+
 
   //route removal logic for route cleanup on search cleanup
   const removeRoute = () => {
@@ -138,7 +185,10 @@ function MapView() {
   
     routeLayerIdRef.current = null;
   };
-  
+
+
+
+
 
   // Update map markers when search changes
   useEffect(() => {
@@ -184,8 +234,15 @@ function MapView() {
   
     markersRef.current = newMarkers;
   }, [filteredFeatures]);
-  
-  
+
+
+  const getAddress = (properties) => {
+    const { addrStreet, addrHousenumber, addrPostcode, addrCity } = properties;
+    return [addrStreet, addrHousenumber, addrPostcode, addrCity]
+        .filter(Boolean)
+        .join(', ');
+  };
+
   //Add to favorites
   const addToFavorites = async (place) => {
     const tokenData = localStorage.getItem('token');
@@ -198,20 +255,19 @@ function MapView() {
     try {
       const { token, userId } = JSON.parse(tokenData);
   
-      const response = await fetch(`http://localhost:5029/api/user/${userId}/favorites`, {
+      const response = await fetch(APIEndpoints.addFavoriteSite, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}` // Optional if backend checks token
         },
         body: JSON.stringify({
-          name: place.properties.name,
-          description: place.properties.description || 'No description'
+          culturalSiteId: place.culturalSiteId,
         })
       });
   
       if (response.ok) {
-        setMessage(`Added ${place.properties.name} to favorites`);
+        alert(`✅ "${place.properties.name}" added to your favorites!`);
       } else if (response.status === 409) {
         setMessage(`⚠️ "${place.properties.name}" is already in your favorites.`);
       } else {
@@ -292,7 +348,9 @@ function MapView() {
   //Logged in check
   const isLoggedIn = () => !!localStorage.getItem("token");
 
-  
+
+
+
   
 
   return (
@@ -300,6 +358,17 @@ function MapView() {
       {/* Sidebar */}
       <div className="sidebar-panel">
         <h3 className="sidebar-title">Locations</h3>
+        <div className="favorites-toggle">
+          <label>
+            <input
+                type="checkbox"
+                checked={showFavoritesOnly}
+                onChange={() => setShowFavoritesOnly(!showFavoritesOnly)}
+            />
+            Show Favorites Only
+          </label>
+        </div>
+
         {message && (
           <div className="message-box">
             {message}
@@ -327,9 +396,9 @@ function MapView() {
           )}
         </div>
         <ul className="location-list">
-          {searchTerm.trim() && filteredFeatures.map((feature) => (
-            <li 
-              key={feature.id} 
+          {searchTerm.trim() &&  filteredFeatures.map((feature) => (
+            <li
+              key={feature.culturalSiteId}
               className="location-item"
               onClick={() => {
                 const featureCoords = feature.geometry.coordinates;
@@ -350,10 +419,53 @@ function MapView() {
               }}
             >
               <strong>{feature.properties.name}</strong><br />
-              <a href={feature.properties.website} target="_blank" rel="noreferrer">Website</a>
-              <Link to={`/location/${encodeURIComponent(feature.id)}`} className="details-link">View Details</Link>
-              
-              {localStorage.getItem("token") && (
+              <span style={{ fontSize: '1em'  }}>
+                      {getMarkerEmoji(extractCategory(feature.properties))}
+                    </span>
+              <span style={{ marginLeft: '10px' }}>
+                      {extractCategory(feature.properties).toString().toUpperCase()}
+                    </span>
+              {
+                //reviews
+                feature.reviews.averageRating && feature.reviews.totalReviews > 0 && (
+                  <div style={{ color: 'gray', fontSize: '0.9em' }}>
+                   <a onClick={(event) => {
+                     event.stopPropagation(); // Prevent map zoom trigger
+                     setShowReviews(true)
+                   }}> {feature.reviews.totalReviews} review{feature.reviews.averageRating > 1 ? 's' : ''}</a>
+                    {' '}-  Rating: {feature.reviews.averageRating.toFixed(1)} ⭐
+                  </div>
+                )
+              }
+              {
+                // Opening hours
+                feature.properties.openingHours && (
+                  <div style={{ color: 'gray', fontSize: '0.9em' }}>
+                    {feature.properties.openingHours}
+                  </div>
+                )
+              }
+
+              {
+                  getAddress(feature.properties) && (
+                      <div style={{ color: 'gray', fontSize: '0.9em' }}>
+                        {getAddress(feature.properties)}
+                      </div>
+                  )
+              }
+
+              {
+                //website
+                feature.properties.website && (
+                  <div style={{ color: 'gray', fontSize: '0.9em' }}>
+                    <a href={feature.properties.website} target="_blank" rel="noopener noreferrer">Website</a>
+                  </div>
+                )
+              }
+
+              {localStorage.getItem("token") && !favorites.some(fav => fav.culturalSite.culturalSiteId === feature.culturalSiteId) && (
+
+
                 <button
                   className="favorite-button"
                   onClick={(e) => {
@@ -364,13 +476,47 @@ function MapView() {
                   ⭐ Add to Favorites
                 </button>
               )}
+              {
+                localStorage.getItem("token") && favorites.some(fav => fav.culturalSite.culturalSiteId === feature.culturalSiteId) && (
+                  <span style={{
+                    color: 'red',
+                    marginRight: '10px',
+                    cursor: 'pointer',
+                    display: 'inline-block'
+                  }}>❤️
+                  </span>
+                )
 
-              <button 
+              }
+
+              <br/>
+
+
+              <button
+                  style={{ marginTop: '10px', marginBottom: '10px' }}
                 className="direction-button"
                 onClick={() => handleShowDirections(feature.geometry.coordinates)}
               >
                 🧭 Directions
               </button>
+
+              {
+                localStorage.getItem("token") && (
+                    <AddReviewModal culturalSiteId={feature.culturalSiteId}></AddReviewModal>
+                    )
+              }
+              {
+                <ReviewViewerModal
+                    show={showReviews}
+                    handleClose={() => setShowReviews(false)}
+                    culturalSiteId={feature.culturalSiteId}
+                />
+              }
+
+
+
+
+
             </li>
           ))}
         </ul>
@@ -380,8 +526,20 @@ function MapView() {
       {/* Map container */}
       <div id="map-container" ref={mapContainerRef} />
 
+
+
     </div>
   )
 }
+
+
+
+//add Reviews
+
+
+
+
+
+
 
 export default MapView
