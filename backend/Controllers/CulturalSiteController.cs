@@ -33,6 +33,13 @@ public class CulturalSiteController: ControllerBase
     public async Task<IActionResult> GetCulturalSites()
     {
         
+        //get 500 cultural sites from the database
+        
+        /*var culturalSites = await _apiDbContext.culturalSites
+            .Select(model => new CultureSiteResponseModel(model))
+            .Take(500)
+            .ToListAsync();*/
+        
         var culturalSites = _apiDbContext.culturalSites.Select(model => new CultureSiteResponseModel(model));
         
       

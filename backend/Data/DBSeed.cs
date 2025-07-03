@@ -66,8 +66,8 @@ public class DBSeed
              var geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
         
         
-
-        String filePath =  Path.Combine(Directory.GetCurrentDirectory(), "Data", "Chemnitz.geojson");
+         String fileName = config.GetSection("ApplicationSettings")["SeedDataFile"];
+        String filePath =  Path.Combine(Directory.GetCurrentDirectory(), "Data", fileName);
 
 
         var geoJson = await File.ReadAllTextAsync(filePath);
@@ -84,13 +84,30 @@ public class DBSeed
         {
             var props = feature["properties"];
             var coords = feature["geometry"]?["coordinates"];
-
-            var latitude = (double)coords[1];  // Latitude
-            var longitude = (double)coords[0]; // Longitude
-             var point = geometryFactory.CreatePoint(new Coordinate(
-                longitude,  // Longitude
-                latitude    // Latitude
-             ));
+            
+             var type = feature["geometry"]?["type"]?.ToString() ?? "Point";
+             Point point = new Point(0, 0);
+             if (type == "LineString")
+             {
+                 //get 1st coordinate of LineString
+                 var firstCoord = coords[0];
+                 var latitude = (double)firstCoord[1];  // Latitude
+                 var longitude = (double)firstCoord[0]; // Longitude
+                 point = geometryFactory.CreatePoint(new Coordinate(
+                     longitude,  // Longitude
+                     latitude    // Latitude
+                 ));
+             }
+             else
+             {
+                 var latitude = (double)coords[1];  // Latitude
+                 var longitude = (double)coords[0]; // Longitude
+                 point = geometryFactory.CreatePoint(new Coordinate(
+                     longitude,  // Longitude
+                     latitude    // Latitude
+                 ));
+                
+             }
 
             var site = new CulturalSiteModel()
             {
@@ -139,7 +156,12 @@ public class DBSeed
                 
             };
 
-           culturalSites.Add(site);
+            //check if site already exists
+            if (!culturalSites.Any(s => s.CulturalSiteId == site.CulturalSiteId))
+            {
+                culturalSites.Add(site);
+            }
+           
         }
         
         if (culturalSites.Count > 0)
