@@ -18,6 +18,7 @@ export const APIEndpoints = {
     deleteUser: `${API_BASE_URL}/User/DeleteUser`,
     getAdminDashboardData: `${API_BASE_URL}/Admin/GetDashboardStatistics`,
     getAllUsers: `${API_BASE_URL}/Admin/GetAllUsers`,
+    getAllInactiveUsers: `${API_BASE_URL}/Admin/getAllInactiveUsers`,
     getActiveUsers: `${API_BASE_URL}/Admin/getAllActiveUsers`,
     syncWithOverPass: `${API_BASE_URL}/Admin/SyncOverpassData`,
 

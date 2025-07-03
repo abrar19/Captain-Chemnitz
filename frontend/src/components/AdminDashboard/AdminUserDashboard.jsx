@@ -49,7 +49,9 @@ function AdminUserDashboard() {
             const tokenData = JSON.parse(localStorage.getItem('token'));
             const token = tokenData?.token;
 
+
             var endPoint = isInactive? APIEndpoints.getAllInactiveUsers: APIEndpoints.getAllUsers;
+
             const response = await fetch(endPoint, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -82,8 +84,12 @@ function AdminUserDashboard() {
 
     function  handleTypeChange(e) {
         setShowInactiveUsers(e.target.checked);
-        console.log(showInactiveUsers);
-        fetchUsers(e.target.checked);
+        console.log("show inactive users", e.target.checked);
+        if (e.target.checked) {
+            fetchUsers(true);
+        }else{
+            fetchUsers(false);
+        }
     }
 
     return(
@@ -129,23 +135,6 @@ function AdminUserDashboard() {
                             </tr>
                             </thead>
                             <tbody>
-                            {/*<tr>*/}
-                            {/*    <td>1</td>*/}
-                            {/*    <td>Mark</td>*/}
-                            {/*    <td>Otto</td>*/}
-                            {/*    <td>@mdo</td>*/}
-                            {/*</tr>*/}
-                            {/*<tr>*/}
-                            {/*    <td>2</td>*/}
-                            {/*    <td>Jacob</td>*/}
-                            {/*    <td>Thornton</td>*/}
-                            {/*    <td>@fat</td>*/}
-                            {/*</tr>*/}
-                            {/*<tr>*/}
-                            {/*    <td>3</td>*/}
-                            {/*    <td colSpan={2}>Larry the Bird</td>*/}
-                            {/*    <td>@twitter</td>*/}
-                            {/*</tr>*/}
                             {users.map((user, index) => (
                                 <tr key={index}>
                                     <td>{index + 1}</td>
