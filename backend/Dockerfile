@@ -21,6 +21,7 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 COPY Data/Chemnitz.geojson ./Data/Chemnitz.geojson
+COPY Data/Sachsen.geojson ./Data/Sachsen.geojson
 
 #COPY wait-for-mssql.sh /wait-for-mssql.sh
 

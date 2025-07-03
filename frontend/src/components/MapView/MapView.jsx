@@ -24,6 +24,9 @@ function MapView() {
 
   const [favorites, setFavorites] = useState([]);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [showMuseumsOnly, setShowMuseumsOnly] = useState(false);
+  const [showHotelsOnly, setShowHotelsOnly] = useState(false);
+  const [showRestaurantsOnly, setShowRestaurantsOnly] = useState(false);
   const [features, setFeatures] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [markerMap, setMarkerMap] = useState({});
@@ -166,7 +169,23 @@ function MapView() {
   const filteredFeatures = features.filter((f) => {
     const name = normalize(f.properties?.name);
     const term = normalize(searchTerm);
-    return name && name.includes(term);
+    const matchesSearch = name && name.includes(term);
+
+    const isFavorite = favorites.some(fav => fav.culturalSite.culturalSiteId === f.culturalSiteId);
+    const category = extractCategory(f.properties);
+
+    const matchesMuseum = !showMuseumsOnly || category === 'museum';
+    const matchesHotel = !showHotelsOnly || category === 'hotel';
+    const matchesRestaurant = !showRestaurantsOnly || category === 'restaurant';
+
+    return (
+      matchesSearch &&
+      (!showFavoritesOnly || isFavorite) &&
+      matchesMuseum &&
+      matchesHotel &&
+      matchesRestaurant
+    );
+    
   });
 
 
@@ -369,6 +388,37 @@ function MapView() {
           </label>
         </div>
 
+        <div className="museum-toggle">
+          <label>
+            <input
+              type="checkbox"
+              checked={showMuseumsOnly}
+              onChange={() => setShowMuseumsOnly(!showMuseumsOnly)}
+            />
+            Show Museums Only
+          </label>
+        </div>
+        <div className="type-toggle">
+          <label>
+            <input
+              type="checkbox"
+              checked={showHotelsOnly}
+              onChange={() => setShowHotelsOnly(!showHotelsOnly)}
+            />
+            Show Hotels Only
+          </label>
+        </div>
+        <div className="type-toggle">
+          <label>
+            <input
+              type="checkbox"
+              checked={showRestaurantsOnly}
+              onChange={() => setShowRestaurantsOnly(!showRestaurantsOnly)}
+            />
+            Show Restaurants Only
+          </label>
+        </div>
+
         {message && (
           <div className="message-box">
             {message}
@@ -396,7 +446,7 @@ function MapView() {
           )}
         </div>
         <ul className="location-list">
-          {searchTerm.trim() &&  filteredFeatures.map((feature) => (
+          {(searchTerm.trim() || showFavoritesOnly) &&  filteredFeatures.map((feature) => (
             <li
               key={feature.culturalSiteId}
               className="location-item"
