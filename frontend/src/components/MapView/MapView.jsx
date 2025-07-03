@@ -16,7 +16,7 @@ function MapView() {
   const markersRef = useRef([])
   const routeLayerIdRef = useRef(null);
 
-
+  const [favorites, setFavorites] = useState([]);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [features, setFeatures] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -92,6 +92,27 @@ function MapView() {
         },
         { enableHighAccuracy: true }
       );
+
+
+    }
+
+    if(isLoggedIn()) {
+      console.log(" logged in");
+      var tokenData = localStorage.getItem('token');
+      const { token } = JSON.parse(tokenData);
+      fetch(APIEndpoints.getMyFavoriteSites, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` // Optional if backend checks token
+        }
+      }).then(async res => {
+        if (!res.ok) {
+          throw new Error('Failed to fetch cultural sites');
+        }
+        var data= await res.json();
+        setFavorites(data);
+      });
     }
     
     
@@ -117,6 +138,9 @@ function MapView() {
       mapRef.current.remove()
     }
   }, [])
+
+
+
 
   // Filter logic
   const normalize = (str) =>
@@ -193,8 +217,15 @@ function MapView() {
   
     markersRef.current = newMarkers;
   }, [filteredFeatures]);
-  
-  
+
+
+  const getAddress = (properties) => {
+    const { addrStreet, addrHousenumber, addrPostcode, addrCity } = properties;
+    return [addrStreet, addrHousenumber, addrPostcode, addrCity]
+        .filter(Boolean)
+        .join(', ');
+  };
+
   //Add to favorites
   const addToFavorites = async (place) => {
     const tokenData = localStorage.getItem('token');
@@ -347,8 +378,8 @@ function MapView() {
         </div>
         <ul className="location-list">
           {searchTerm.trim() &&  filteredFeatures.map((feature) => (
-            <li 
-              key={feature.id} 
+            <li
+              key={feature.id}
               className="location-item"
               onClick={() => {
                 const featureCoords = feature.geometry.coordinates;
@@ -369,10 +400,40 @@ function MapView() {
               }}
             >
               <strong>{feature.properties.name}</strong><br />
-              <a href={feature.properties.website} target="_blank" rel="noreferrer">Website</a>
-              <Link to={`/location/${encodeURIComponent(feature.id)}`} className="details-link">View Details</Link>
+              <span style={{ fontSize: '1em'  }}>
+                      {getMarkerEmoji(extractCategory(feature.properties))}
+                    </span>
+              <span style={{ marginLeft: '10px' }}>
+                      {extractCategory(feature.properties).toString().toUpperCase()}
+                    </span>
+              {
+                // Opening hours
+                feature.properties.openingHours && (
+                  <div style={{ color: 'gray', fontSize: '0.9em' }}>
+                    {feature.properties.openingHours}
+                  </div>
+                )
+              }
 
-              {localStorage.getItem("token") && (
+              {
+                  getAddress(feature.properties) && (
+                      <div style={{ color: 'gray', fontSize: '0.9em' }}>
+                        {getAddress(feature.properties)}
+                      </div>
+                  )
+              }
+
+              {
+                //website
+                feature.properties.website && (
+                  <div style={{ color: 'gray', fontSize: '0.9em' }}>
+                    <a href={feature.properties.website} target="_blank" rel="noopener noreferrer">Website</a>
+                  </div>
+                )
+              }
+
+              {localStorage.getItem("token") && !favorites.some(fav => fav.culturalSite.culturalSiteId === feature.culturalSiteId) && (
+
 
                 <button
                   className="favorite-button"
@@ -384,8 +445,20 @@ function MapView() {
                   ⭐ Add to Favorites
                 </button>
               )}
+              {
+                localStorage.getItem("token") && favorites.some(fav => fav.culturalSite.culturalSiteId === feature.culturalSiteId) && (
+                  <span style={{
+                    color: 'red',
+                    marginRight: '10px',
+                    cursor: 'pointer',
+                    display: 'inline-block'
+                  }}>❤️
+                  </span>
+                )
 
+              }
 
+              <br/>
 
 
               <button
@@ -406,5 +479,7 @@ function MapView() {
     </div>
   )
 }
+
+
 
 export default MapView
