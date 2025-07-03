@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@turf/boolean-point-in-polygon": "^7.2.0",
     "bootstrap": "^5.3.7",
     "jwt-decode": "^4.0.0",
     "mapbox-gl": "^3.12.0",
