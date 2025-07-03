@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './login.css';
 import {APIEndpoints} from "../../constants/APIEndpoints.js";
+import {jwtDecode} from "jwt-decode";
 
 function Login() {
   const navigate = useNavigate();
@@ -32,14 +33,18 @@ function Login() {
   
         // Save token + userId in localStorage
         localStorage.setItem('token', JSON.stringify({
-          token: data.token,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          email: data.email,
-          role: data.role,
+          token: data.token
         }));
-  
-        navigate('/');
+
+        const decodedToken = jwtDecode(data.token);
+        console.log(decodedToken.role);
+
+        if(decodedToken.role === 'Admin') {
+          navigate('/admin');
+        } else if(decodedToken.role === 'AppUsers') {
+            navigate('/');
+        }
+
       }else {
         const data = await response.json();
         setError(`Login failed: ${data.message || 'Something went wrong'}`);
