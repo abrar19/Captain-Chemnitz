@@ -15,6 +15,7 @@ export const APIEndpoints = {
     updateUserPassword: `${API_BASE_URL}/User/UpdatePassword`,
     addReview: `${API_BASE_URL}/Review/addReview`,
     getReviews: (id) => `${API_BASE_URL}/Review/getReviews?culturalSiteId=${id}`,
+    deleteUser: `${API_BASE_URL}/User/DeleteUser`,
     
 
 }
