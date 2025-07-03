@@ -563,7 +563,7 @@ function MapView() {
                     </span>
               {
                 //reviews
-                feature.reviews.averageRating && feature.reviews.totalReviews > 0 && (
+                (feature.reviews.totalReviews > 0) && (
                   <div style={{ color: 'gray', fontSize: '0.9em' }}>
                    <a onClick={(event) => {
                      event.stopPropagation(); // Prevent map zoom trigger
