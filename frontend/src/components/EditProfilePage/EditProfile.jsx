@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import "./EditProfile.css";
 import {APIEndpoints} from "../../constants/APIEndpoints.js";
-import {Tab, Tabs} from "react-bootstrap";
+import {Tab, Tabs,Button} from "react-bootstrap";
+import Modal from 'react-bootstrap/Modal';
 
 const EditProfile = () => {
   const [formData, setFormData] = useState({
@@ -14,6 +15,13 @@ const EditProfile = () => {
     currentPassword: "",
     password: ""
     });
+
+
+  const [show, setShow] = useState(false);
+
+  const handleClose = () => setShow(false);
+  const handleShow = () => setShow(true);
+
 
 
   const [message, setMessage] = useState("");
@@ -58,6 +66,35 @@ const EditProfile = () => {
         [e.target.name]: e.target.value,
     }));
     };
+
+
+    const handleDeleteAccount = () => {
+    console.log("delete account");
+    var tokenData = localStorage.getItem("token");
+    var token = JSON.parse(tokenData).token;
+    fetch(APIEndpoints.deleteUser, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to delete account");
+        }
+        handleClose(); // Close the modal
+        localStorage.removeItem("token");
+        alert("Account deleted successfully.");
+        window.location.href = "/"; // Redirect to home page after deletion
+
+
+      })
+      .catch((error) => {
+        setMessage(error.message);
+      });
+    
+    }
 
 
   const handleSubmit = async (e) => {
@@ -166,6 +203,32 @@ const EditProfile = () => {
           </label>
           <button type="submit">Update Profile</button>
         </form>
+
+        <br/>
+        <div  className="button-group text-center" >
+          <Button variant="danger"
+            onClick={handleShow}
+          >Delete Account</Button>
+        </div>
+
+
+
+        <Modal show={show} onHide={handleClose}>
+          <Modal.Header closeButton>
+            <Modal.Title>Delete Account</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+          </Modal.Body>
+          <Modal.Footer>
+
+            <Button variant="danger" onClick={handleDeleteAccount}>
+                Confirm
+            </Button>
+          </Modal.Footer>
+        </Modal>
+
+
         {message && <p className="message">{message}</p>}
 
         <br />
@@ -195,6 +258,8 @@ const EditProfile = () => {
             </label>
             <button type="submit">Update Password</button>
           </form>
+
+
           {passwordMessage && <p className="message">{passwordMessage}</p>}
         </Tab>
     </Tabs>
