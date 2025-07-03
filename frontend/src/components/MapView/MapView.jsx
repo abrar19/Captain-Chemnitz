@@ -4,6 +4,10 @@ import { Link, useNavigate} from 'react-router-dom';
 import mapboxgl from 'mapbox-gl'
 
 import 'mapbox-gl/dist/mapbox-gl.css';
+
+import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
+import { point } from '@turf/helpers';
+
 import './mapView.css'
 import {APIEndpoints} from "../../constants/APIEndpoints.js";
 import AddReviewModal from "../AddReview/AddReviewModal.jsx";
@@ -27,6 +31,8 @@ function MapView() {
   const [showMuseumsOnly, setShowMuseumsOnly] = useState(false);
   const [showHotelsOnly, setShowHotelsOnly] = useState(false);
   const [showRestaurantsOnly, setShowRestaurantsOnly] = useState(false);
+  const [showWithin10MinOnly, setShowWithin10MinOnly] = useState(false);
+  const [isochronePolygon, setIsochronePolygon] = useState(null);
   const [features, setFeatures] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [markerMap, setMarkerMap] = useState({});
@@ -170,23 +176,36 @@ function MapView() {
     const name = normalize(f.properties?.name);
     const term = normalize(searchTerm);
     const matchesSearch = name && name.includes(term);
-
-    const isFavorite = favorites.some(fav => fav.culturalSite.culturalSiteId === f.culturalSiteId);
+  
+    const isFavorite = favorites.some(
+      fav => fav.culturalSite.culturalSiteId === f.culturalSiteId
+    );
+  
     const category = extractCategory(f.properties);
-
+  
     const matchesMuseum = !showMuseumsOnly || category === 'museum';
     const matchesHotel = !showHotelsOnly || category === 'hotel';
     const matchesRestaurant = !showRestaurantsOnly || category === 'restaurant';
-
+  
+    const matchesFavorite = !showFavoritesOnly || isFavorite;
+  
+    let within10Min = true;
+    if (showWithin10MinOnly && isochronePolygon) {
+      const [lng, lat] = f.geometry.coordinates;
+      const pt = point([lng, lat]);
+      within10Min = booleanPointInPolygon(pt, isochronePolygon);
+    }
+  
     return (
       matchesSearch &&
-      (!showFavoritesOnly || isFavorite) &&
+      matchesFavorite &&
       matchesMuseum &&
       matchesHotel &&
-      matchesRestaurant
+      matchesRestaurant &&
+      within10Min
     );
-    
   });
+  
 
 
 
@@ -358,6 +377,63 @@ function MapView() {
     }
   };
 
+  //Isochrone API
+  useEffect(() => {
+    const fetchIsochrone = async () => {
+      if (!showWithin10MinOnly || !userLocation) {
+        setIsochronePolygon(null);
+        return;
+      }
+  
+      const [lng, lat] = userLocation;
+      const url = `https://api.mapbox.com/isochrone/v1/mapbox/walking/${lng},${lat}?contours_minutes=10&polygons=true&access_token=${import.meta.env.VITE_MAPBOX_TOKEN}`;
+  
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        setIsochronePolygon(data.features[0]); // GeoJSON polygon
+      } catch (err) {
+        console.error("Failed to fetch isochrone:", err);
+      }
+    };
+  
+    fetchIsochrone();
+  }, [showWithin10MinOnly, userLocation]);
+  
+  //Show Polygon on the Map
+  useEffect(() => {
+    const map = mapRef.current;
+  
+    if (isochronePolygon) {
+      // Remove existing if any
+      if (map.getSource('isochrone')) {
+        map.removeLayer('isochrone-layer');
+        map.removeSource('isochrone');
+      }
+  
+      map.addSource('isochrone', {
+        type: 'geojson',
+        data: isochronePolygon,
+      });
+  
+      map.addLayer({
+        id: 'isochrone-layer',
+        type: 'fill',
+        source: 'isochrone',
+        layout: {},
+        paint: {
+          'fill-color': '#ffa500',
+          'fill-opacity': 0.3,
+        },
+      });
+    } else {
+      if (map.getSource('isochrone')) {
+        map.removeLayer('isochrone-layer');
+        map.removeSource('isochrone');
+      }
+    }
+  }, [isochronePolygon]);
+  
   //Logout
   const handleLogout = () => {
     localStorage.removeItem("token"); // or localStorage.clear() if you want to wipe all
@@ -416,6 +492,16 @@ function MapView() {
               onChange={() => setShowRestaurantsOnly(!showRestaurantsOnly)}
             />
             Show Restaurants Only
+          </label>
+        </div>
+        <div className="time-filter-toggle">
+          <label>
+            <input
+              type="checkbox"
+              checked={showWithin10MinOnly}
+              onChange={() => setShowWithin10MinOnly(!showWithin10MinOnly)}
+            />
+            Show places within 10 minutes
           </label>
         </div>
 
