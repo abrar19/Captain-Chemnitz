@@ -112,7 +112,7 @@ function Favorites() {
                     )}
 
                     <br/>
-                    <Button variant="primary" onClick={() => handleRemoveFromFavorites(fav.favoriteSiteId)}>Remove From Favorite</Button>
+                    <Button style={{marginTop:10}} variant="secondary" onClick={() => handleRemoveFromFavorites(fav.favoriteSiteId)}>Remove From Favorite</Button>
                   </div>
 
                 </Card.Body>

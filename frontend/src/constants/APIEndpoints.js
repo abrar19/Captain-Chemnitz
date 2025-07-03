@@ -13,6 +13,8 @@ export const APIEndpoints = {
     getUserProfile: `${API_BASE_URL}/User/GetUserProfile`,
     updateUserProfile: `${API_BASE_URL}/User/UpdateProfile`,
     updateUserPassword: `${API_BASE_URL}/User/UpdatePassword`,
+    addReview: `${API_BASE_URL}/Review/addReview`,
+    getReviews: (id) => `${API_BASE_URL}/Review/getReviews?culturalSiteId=${id}`,
     
 
 }

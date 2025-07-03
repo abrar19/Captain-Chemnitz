@@ -52,4 +52,6 @@ public class CulturalSiteModel
     public string Takeaway { get; set; }
     public string WebsiteMenu { get; set; }
     
+    public ICollection<ReviewModel> Reviews { get; set; } = new List<ReviewModel>();
+    
 }

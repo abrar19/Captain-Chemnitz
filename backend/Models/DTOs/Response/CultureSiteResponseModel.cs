@@ -12,6 +12,8 @@ public class CultureSiteResponseModel
             type = "Point",
             coordinates = new double[] { culturalSite.Location.X, culturalSite.Location.Y }
         };
+        
+        
         properties = new Properties
         {
             CulturalSiteId = culturalSite.CulturalSiteId,
@@ -38,6 +40,15 @@ public class CultureSiteResponseModel
     public string CulturalSiteId { get; set; }
     public Geometry geometry { get; set; }
     public Properties properties { get; set; }
+    
+    public Review reviews { get; set; } = new Review();
+   
+}
+
+public class Review
+{
+    public double AverageRating { get; set; } = 0;
+    public int TotalReviews { get; set; } = 0;
 }
 
 public class Geometry

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./EditProfile.css";
 import {APIEndpoints} from "../../constants/APIEndpoints.js";
+import {Tab, Tabs} from "react-bootstrap";
 
 const EditProfile = () => {
   const [formData, setFormData] = useState({
@@ -19,6 +20,9 @@ const EditProfile = () => {
   const [passwordMessage, setPasswordMessage] = useState("");
 
   const { userId, token } = JSON.parse(localStorage.getItem("token"));
+
+
+  const [key, setKey] = useState('profile');
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -120,20 +124,29 @@ const EditProfile = () => {
       }
     }
 
+
+
   return (
     <div className="edit-profile-container">
       <h2>My Profile</h2>
-      <form onSubmit={handleSubmit} className="edit-profile-form">
-        <label>
-          First Name:
-          <input
-            type="text"
-            name="FirstName"
-            value={formData.FirstName}
-            onChange={handleChange}
-          />
-        </label>
-        <label>
+    <Tabs
+    activeKey={key}
+    onSelect={(k) => setKey(k)}
+    id="controlled-tab-example"
+    className="mb-3"
+    >
+      <Tab title="Profile" eventKey="profile">
+        <form onSubmit={handleSubmit} className="edit-profile-form">
+          <label>
+            First Name:
+            <input
+                type="text"
+                name="FirstName"
+                value={formData.FirstName}
+                onChange={handleChange}
+            />
+          </label>
+          <label>
             Last Name:
             <input
                 type="text"
@@ -141,45 +154,50 @@ const EditProfile = () => {
                 value={formData.LastName}
                 onChange={handleChange}
             />
-        </label>
-        <label>
-          Email:
-          <input
-            type="email"
-            name="Email"
-            value={formData.Email}
-            disabled
-          />
-        </label>
-        <button type="submit">Update Profile</button>
-      </form>
-      {message && <p className="message">{message}</p>}
+          </label>
+          <label>
+            Email:
+            <input
+                type="email"
+                name="Email"
+                value={formData.Email}
+                disabled
+            />
+          </label>
+          <button type="submit">Update Profile</button>
+        </form>
+        {message && <p className="message">{message}</p>}
 
-      <br />
-     <h2>Change Password</h2>
+        <br />
 
-        <form onSubmit={handleSubmitPassword} className="edit-profile-form">
+      </Tab>
+
+        <Tab title="Password" eventKey="password">
+
+          <form onSubmit={handleSubmitPassword} className="edit-profile-form">
             <label>
-                Current Password:
-                <input
-                type="password"
-                name="currentPassword"
-                value={formDataPassword.currentPassword}
-                onChange={handleChangePassword}
-                />
+              Current Password:
+              <input
+                  type="password"
+                  name="currentPassword"
+                  value={formDataPassword.currentPassword}
+                  onChange={handleChangePassword}
+              />
             </label>
             <label>
-                New Password:
-                <input
-                type="password"
-                name="password"
-                value={formDataPassword.password}
-                onChange={handleChangePassword}
-                />
+              New Password:
+              <input
+                  type="password"
+                  name="password"
+                  value={formDataPassword.password}
+                  onChange={handleChangePassword}
+              />
             </label>
             <button type="submit">Update Password</button>
-        </form>
-      {passwordMessage && <p className="message">{passwordMessage}</p>}
+          </form>
+          {passwordMessage && <p className="message">{passwordMessage}</p>}
+        </Tab>
+    </Tabs>
     </div>
   );
 };

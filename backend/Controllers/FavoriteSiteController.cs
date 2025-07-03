@@ -137,7 +137,32 @@ public class FavoriteSiteController: ControllerBase
             .Select(fs=> new FavoriteSiteResponseModel(fs.FavoriteSiteId, new CultureSiteResponseModel(fs.culturalSiteModel)))
             .ToListAsync();
 
-        return Ok(favoriteSites);
+        //add reviews to favorite sites
+        var reviews = await _apiDbContext.reviews
+            .GroupBy(r => r.CulturalSiteId)
+            .Select(g => new
+            {
+                CulturalSiteId = g.Key,
+                AverageRating = g.Average(r => r.Rating),
+                ReviewCount = g.Count()
+            })
+            .ToDictionaryAsync(x => x.CulturalSiteId, x => new { x.AverageRating, x.ReviewCount });
+       
+        List<FavoriteSiteResponseModel> customFavoriteSitesList = new List<FavoriteSiteResponseModel>();
+        foreach (var site in favoriteSites)
+        {
+            var reviewData = reviews.ContainsKey(site.CulturalSite.CulturalSiteId)
+                ? reviews[site.CulturalSite.CulturalSiteId]
+                : new { AverageRating = 0.0, ReviewCount = 0 };
+
+            site.CulturalSite.reviews.AverageRating = reviewData.AverageRating;
+            site.CulturalSite.reviews.TotalReviews = reviewData.ReviewCount;
+            
+            customFavoriteSitesList.Add(site);
+        }
+        
+        
+        return Ok(customFavoriteSitesList);
     }
     
     [HttpDelete("removeFromFavorites/{favoriteSiteId}")]

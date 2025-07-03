@@ -6,6 +6,12 @@ import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './mapView.css'
 import {APIEndpoints} from "../../constants/APIEndpoints.js";
+import AddReviewModal from "../AddReview/AddReviewModal.jsx";
+import Button from "react-bootstrap/Button";
+import Modal from "react-bootstrap/Modal";
+import Form from "react-bootstrap/Form";
+import ReviewViewerModal from "../ViewReviews/ReviewViewerModal.jsx";
+
 
 function MapView() {
 
@@ -23,6 +29,18 @@ function MapView() {
   const [markerMap, setMarkerMap] = useState({});
   const [userLocation, setUserLocation] = useState(null);
   const [message, setMessage] = useState('');
+
+
+
+
+
+
+  const [showReviews, setShowReviews] = useState(false);
+
+
+
+
+
 
   const extractCategory = (properties) => {
     // Order matters: check common keys from most to least specific
@@ -97,7 +115,6 @@ function MapView() {
     }
 
     if(isLoggedIn()) {
-      console.log(" logged in");
       var tokenData = localStorage.getItem('token');
       const { token } = JSON.parse(tokenData);
       fetch(APIEndpoints.getMyFavoriteSites, {
@@ -331,7 +348,9 @@ function MapView() {
   //Logged in check
   const isLoggedIn = () => !!localStorage.getItem("token");
 
-  
+
+
+
   
 
   return (
@@ -379,7 +398,7 @@ function MapView() {
         <ul className="location-list">
           {searchTerm.trim() &&  filteredFeatures.map((feature) => (
             <li
-              key={feature.id}
+              key={feature.culturalSiteId}
               className="location-item"
               onClick={() => {
                 const featureCoords = feature.geometry.coordinates;
@@ -406,6 +425,18 @@ function MapView() {
               <span style={{ marginLeft: '10px' }}>
                       {extractCategory(feature.properties).toString().toUpperCase()}
                     </span>
+              {
+                //reviews
+                feature.reviews.averageRating && feature.reviews.totalReviews > 0 && (
+                  <div style={{ color: 'gray', fontSize: '0.9em' }}>
+                   <a onClick={(event) => {
+                     event.stopPropagation(); // Prevent map zoom trigger
+                     setShowReviews(true)
+                   }}> {feature.reviews.totalReviews} review{feature.reviews.averageRating > 1 ? 's' : ''}</a>
+                    {' '}-  Rating: {feature.reviews.averageRating.toFixed(1)} ⭐
+                  </div>
+                )
+              }
               {
                 // Opening hours
                 feature.properties.openingHours && (
@@ -462,11 +493,30 @@ function MapView() {
 
 
               <button
+                  style={{ marginTop: '10px', marginBottom: '10px' }}
                 className="direction-button"
                 onClick={() => handleShowDirections(feature.geometry.coordinates)}
               >
                 🧭 Directions
               </button>
+
+              {
+                localStorage.getItem("token") && (
+                    <AddReviewModal culturalSiteId={feature.culturalSiteId}></AddReviewModal>
+                    )
+              }
+              {
+                <ReviewViewerModal
+                    show={showReviews}
+                    handleClose={() => setShowReviews(false)}
+                    culturalSiteId={feature.culturalSiteId}
+                />
+              }
+
+
+
+
+
             </li>
           ))}
         </ul>
@@ -476,9 +526,19 @@ function MapView() {
       {/* Map container */}
       <div id="map-container" ref={mapContainerRef} />
 
+
+
     </div>
   )
 }
+
+
+
+//add Reviews
+
+
+
+
 
 
 

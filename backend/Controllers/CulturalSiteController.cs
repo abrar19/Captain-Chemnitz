@@ -34,8 +34,41 @@ public class CulturalSiteController: ControllerBase
     {
         
         var culturalSites = _apiDbContext.culturalSites.Select(model => new CultureSiteResponseModel(model));
+        
       
-        return Ok(culturalSites.ToList());
+
+        var customCulturalSitesList = await addReviews(culturalSites.ToList());
+      
+        return Ok(customCulturalSitesList);
+    }
+    
+    private async Task<IQueryable<CultureSiteResponseModel>> addReviews(List<CultureSiteResponseModel> culturalSites)
+    {
+        List<CultureSiteResponseModel> customCulturalSitesList = [];
+        var reviews = await _apiDbContext.reviews
+            .GroupBy(r => r.CulturalSiteId)
+            .Select(g => new
+            {
+                CulturalSiteId = g.Key,
+                AverageRating = g.Average(r => r.Rating),
+                ReviewCount = g.Count()
+            })
+            .ToDictionaryAsync(x => x.CulturalSiteId, x => new { x.AverageRating, x.ReviewCount });
+
+
+        foreach (var site in culturalSites)
+        {
+            var reviewData = reviews.ContainsKey(site.CulturalSiteId)
+                ? reviews[site.CulturalSiteId]
+                : new { AverageRating = 0.0, ReviewCount = 0 };
+
+            site.reviews.AverageRating = reviewData.AverageRating;
+            site.reviews.TotalReviews = reviewData.ReviewCount;
+
+            customCulturalSitesList.Add(site);
+        }
+        
+        return customCulturalSitesList.AsQueryable();
     }
     
     
@@ -52,8 +85,9 @@ public class CulturalSiteController: ControllerBase
             .ToListAsync();
 
        
+        var customCulturalSitesList = await addReviews(sites);
 
-        return Ok(sites.ToList());
+        return Ok(customCulturalSitesList);
     }
     
     
